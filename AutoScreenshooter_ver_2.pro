@@ -1,6 +1,12 @@
-QT       += core gui
+QT       += core gui webenginewidgets webenginecore
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+
+#INCLUDEPATH = A:/Qt/xlnt_x64-windows/include
+#LIBS += A:/Qt/xlnt_x64-windows/debug/lib/xlntd.lib
+
+INCLUDEPATH = C:/Users/kznts/vcpkg/packages/xlnt_x64-windows/include
+LIBS += C:/Users/kznts/vcpkg/packages/xlnt_x64-windows/debug/lib/xlntd.lib
 
 CONFIG += c++17
 
@@ -10,24 +16,18 @@ CONFIG += c++17
 
 SOURCES += \
     classes/table.cpp \
-    classes/web.cpp \
     forms/mainwindow.cpp \
+    forms/web.cpp \
     main.cpp \
-    mainwindow.cpp \
-    table.cpp \
-    web.cpp
 
 HEADERS += \
     classes/table.h \
-    classes/web.h \
     forms/mainwindow.h \
-    mainwindow.h \
-    table.h \
-    web.h
+    forms/web.h
 
 FORMS += \
     forms/mainwindow.ui \
-    mainwindow.ui
+    forms/web.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

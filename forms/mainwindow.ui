@@ -20,16 +20,6 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QWidget" name="widget" native="true">
-    <property name="geometry">
-     <rect>
-      <x>180</x>
-      <y>0</y>
-      <width>1091</width>
-      <height>521</height>
-     </rect>
-    </property>
-   </widget>
    <widget class="QTableView" name="tableView">
     <property name="geometry">
      <rect>
@@ -88,11 +78,21 @@
      <string>Автомат</string>
     </property>
    </widget>
-   <zorder>widget</zorder>
+   <widget class="Web" name="widget" native="true">
+    <property name="geometry">
+     <rect>
+      <x>180</x>
+      <y>10</y>
+      <width>1091</width>
+      <height>511</height>
+     </rect>
+    </property>
+   </widget>
    <zorder>screenBtn</zorder>
    <zorder>loadTableBtn</zorder>
    <zorder>autoBtn</zorder>
    <zorder>tableView</zorder>
+   <zorder>widget</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -112,6 +112,14 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>Web</class>
+   <extends>QWidget</extends>
+   <header>web.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <tabstops>
   <tabstop>tableView</tabstop>
   <tabstop>loadTableBtn</tabstop>
