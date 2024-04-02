@@ -15,12 +15,14 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    classes/screenshot.cpp \
     classes/table.cpp \
     forms/mainwindow.cpp \
     forms/web.cpp \
     main.cpp \
 
 HEADERS += \
+    classes/screenshot.h \
     classes/table.h \
     forms/mainwindow.h \
     forms/web.h

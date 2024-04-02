@@ -8,6 +8,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     QPushButton *ltb = ui ->loadTableBtn;
+    screenBtn = ui -> screenBtn;
     ltb -> setAutoDefault(false);
     QObject::connect(ltb, &QPushButton::clicked, this, &MainWindow::loadTable);
 }
