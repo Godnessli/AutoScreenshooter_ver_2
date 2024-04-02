@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "classes/screenshot.h"
 #include "classes/table.h"
 #include "ui_mainwindow.h"
 
@@ -8,9 +9,11 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     QPushButton *ltb = ui ->loadTableBtn;
-    screenBtn = ui -> screenBtn;
+    QPushButton *screen = ui -> screenBtn;
     ltb -> setAutoDefault(false);
+    screen -> setAutoDefault(false);
     QObject::connect(ltb, &QPushButton::clicked, this, &MainWindow::loadTable);
+    QObject::connect(screen, &QPushButton::clicked, this, &MainWindow::screenshot);
 }
 
 MainWindow::~MainWindow()
@@ -29,3 +32,11 @@ void MainWindow::loadTable()
     else
         return;
 }
+
+void MainWindow::screenshot()
+{
+    Screenshot *scr = new Screenshot;
+    scr -> shootScreen();
+    scr -> saveScreenshot();
+}
+

@@ -12,7 +12,6 @@ Web::Web(QWidget *parent)
     QWebEnginePage *page = new QWebEnginePage();
 
     page -> load(QUrl("https://webnavlo.nta.group/WNavSystemB"));
-    page ->
 
     QObject::connect(page, &QWebEnginePage::certificateError,
                      [](QWebEngineCertificateError e) { e.acceptCertificate(); });

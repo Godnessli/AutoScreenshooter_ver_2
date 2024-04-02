@@ -1,12 +1,10 @@
-QT       += core gui webenginewidgets webenginecore
+QT       += core gui widgets webenginewidgets webenginecore sql
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+INCLUDEPATH = A:/Qt/xlnt_x64-windows/include
+LIBS += A:/Qt/xlnt_x64-windows/debug/lib/xlntd.lib
 
-#INCLUDEPATH = A:/Qt/xlnt_x64-windows/include
-#LIBS += A:/Qt/xlnt_x64-windows/debug/lib/xlntd.lib
-
-INCLUDEPATH = C:/Users/kznts/vcpkg/packages/xlnt_x64-windows/include
-LIBS += C:/Users/kznts/vcpkg/packages/xlnt_x64-windows/debug/lib/xlntd.lib
+#INCLUDEPATH = C:/Users/kznts/vcpkg/packages/xlnt_x64-windows/include
+#LIBS += C:/Users/kznts/vcpkg/packages/xlnt_x64-windows/debug/lib/xlntd.lib
 
 CONFIG += c++17
 

@@ -14,14 +14,8 @@ class Screenshot : public QWidget
 public:
     Screenshot();
 
-protected:
-    void resizeEvent(QResizeEvent *event) override;
-
-private slots:
-    void newScreenshot();
     void saveScreenshot();
     void shootScreen();
-    void updateCheckBox();
 
 private:
     void updateScreenshotLabel();

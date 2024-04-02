@@ -6,8 +6,6 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    Screenshot s;
-    s.show();
     MainWindow w;
     w.show();
     return a.exec();

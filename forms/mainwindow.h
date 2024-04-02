@@ -18,10 +18,9 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-    QPushButton *screenBtn;
-
 private slots:
     void loadTable();
+    void screenshot();
 
 private:
     Ui::MainWindow *ui;

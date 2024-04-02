@@ -1,11 +1,15 @@
 #ifndef TABLE_H
 #define TABLE_H
+
 #include <QString>
+#include <QSqlQueryModel>
 
 class Table
 {
+    Q_OBJECT
+
 public:
-    Table();
+    Table(QObject *parent = nullptr);
 
     QString filepath;
     bool run_already;
