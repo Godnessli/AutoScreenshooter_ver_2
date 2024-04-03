@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QtWebEngineCore>
 #include <QMainWindow>
 #include <QPushButton>
 
@@ -19,8 +20,9 @@ public:
     ~MainWindow();
 
 private slots:
-    void loadTable();
+    void buildTable();
     void screenshot();
+    void web();
 
 private:
     Ui::MainWindow *ui;

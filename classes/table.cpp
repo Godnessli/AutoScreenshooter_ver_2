@@ -5,7 +5,7 @@
 
 using namespace xlnt;
 
-Table::Table()
+Table::Table(QWidget *parent) : QWidget(parent)
 {
 }
 
@@ -29,10 +29,10 @@ bool Table::check(const QString &path)
 
 QVector<QVector<QString>> Table::readtable()
 {
-    Table table;
+    getpath();
     QVector<QVector<QString>> tab;
     QString check1 = "ОБРЫВ БЛОКА ГЛОНАСС", check2 = "ПРОБКИ", check3 = "РЕЙС ВЫПОЛНЕН ПРАВИЛЬНО";
-    if (table.check(filepath))
+    if (check(filepath))
     {
         workbook wb;
         wb.load(filepath.toStdString());

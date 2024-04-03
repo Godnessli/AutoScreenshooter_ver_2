@@ -16,18 +16,15 @@ SOURCES += \
     classes/screenshot.cpp \
     classes/table.cpp \
     forms/mainwindow.cpp \
-    forms/web.cpp \
     main.cpp \
 
 HEADERS += \
     classes/screenshot.h \
     classes/table.h \
-    forms/mainwindow.h \
-    forms/web.h
+    forms/mainwindow.h
 
 FORMS += \
-    forms/mainwindow.ui \
-    forms/web.ui
+    forms/mainwindow.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
