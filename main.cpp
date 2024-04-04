@@ -1,5 +1,4 @@
 #include "forms/mainwindow.h"
-#include "classes/screenshot.h"
 
 #include <QApplication>
 

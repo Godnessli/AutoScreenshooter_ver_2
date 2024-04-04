@@ -1,10 +1,10 @@
 QT       += core gui widgets webenginewidgets webenginecore sql
 
-#INCLUDEPATH = A:/Qt/xlnt_x64-windows/include
-#LIBS += A:/Qt/xlnt_x64-windows/debug/lib/xlntd.lib
+INCLUDEPATH = A:/Qt/xlnt_x64-windows/include
+LIBS += A:/Qt/xlnt_x64-windows/debug/lib/xlntd.lib
 
-INCLUDEPATH = C:/Users/kznts/vcpkg/packages/xlnt_x64-windows/include
-LIBS += C:/Users/kznts/vcpkg/packages/xlnt_x64-windows/debug/lib/xlntd.lib
+#INCLUDEPATH = C:/Users/kznts/vcpkg/packages/xlnt_x64-windows/include
+#LIBS += C:/Users/kznts/vcpkg/packages/xlnt_x64-windows/debug/lib/xlntd.lib
 
 CONFIG += c++17
 
@@ -13,14 +13,12 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    classes/screenshot.cpp \
     classes/table.cpp \
     forms/mainwindow.cpp \
     main.cpp \
 
 HEADERS += \
     classes/delegate.h \
-    classes/screenshot.h \
     classes/table.h \
     forms/mainwindow.h
 

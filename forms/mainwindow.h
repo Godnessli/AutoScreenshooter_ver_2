@@ -32,6 +32,8 @@ private slots:
     void autoscr();
 
 private:
+    bool isBuild = false;
     Ui::MainWindow *ui;
+
 };
 #endif // MAINWINDOW_H

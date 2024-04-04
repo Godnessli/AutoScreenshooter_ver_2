@@ -1,5 +1,4 @@
 #include "mainwindow.h"
-#include "classes/screenshot.h"
 #include "classes/table.h"
 #include "ui_mainwindow.h"
 #include "classes/delegate.h"
@@ -34,72 +33,185 @@ void MainWindow::buildTable()
     Table *table = new Table;
     QSizePolicy qsp;
     QVector<QVector<QString>> tab = table ->readtable();
-    QPalette p = palette();
-    const QColor hlClr = "#87cefa";
-    const QColor txtClr = "black";
-
-    ui -> tableWidget_Item -> setRowCount(tab.size());
-    ui -> tableWidget_Item -> setColumnCount(8);
-    ui -> tableWidget_Item -> setSelectionBehavior(QAbstractItemView::SelectRows);
-    ui -> tableWidget_Item -> setSelectionMode(QAbstractItemView::SingleSelection);
-
-    ui -> tableWidget_Item -> selectionModel() -> select(qmi.siblingAtRow(1), QItemSelectionModel::Rows);
-
-    for(int i = 0; i < ui -> tableWidget_Item ->rowCount(); ++i)
+    if(!tab.empty())
     {
-        for(int j = 0; j < ui -> tableWidget_Item -> columnCount(); ++j)
+        numRow = 0;
+        m_delegate -> setRows({});
+        QPalette p = palette();
+        QVector<int> rws;
+        const QColor hlClr = "#87cefa";
+        const QColor txtClr = "black";
+
+        ui -> tableWidget_Item -> setRowCount(tab.size());
+        ui -> tableWidget_Item -> setColumnCount(8);
+        ui -> tableWidget_Item -> setSelectionBehavior(QAbstractItemView::SelectRows);
+        ui -> tableWidget_Item -> setSelectionMode(QAbstractItemView::SingleSelection);
+
+        ui -> tableWidget_Item -> selectionModel() -> select(qmi.siblingAtRow(1), QItemSelectionModel::Rows);
+
+        for(int i = 0; i < ui -> tableWidget_Item ->rowCount(); ++i)
         {
-            ui -> tableWidget_Item -> setItem(i, j, new QTableWidgetItem(QString(tab[i][j])));
+            for(int j = 0; j < ui -> tableWidget_Item -> columnCount(); ++j)
+            {
+                ui -> tableWidget_Item -> setItem(i, j, new QTableWidgetItem(QString(tab[i][j])));
+            }
+            QString check = ui -> tableWidget_Item -> item(numRow, 7) -> text();
+            if(check == QString("Есть") || check == QString("Видео") || check == QString("ГеоДанные"))
+            {
+                numRow += 1;
+                rws.push_back(i);
+            }
+            else
+                numRow += 1;
         }
+
+        m_delegate -> setRows(rws);
+        ui -> tableWidget_Item -> update();
+
+        qsp.setHorizontalPolicy(QSizePolicy::Expanding);
+
+        ui -> tableWidget_Item -> horizontalHeader() -> setSectionResizeMode(QHeaderView::Stretch);
+
+        p.setColor(QPalette::Highlight, hlClr);
+        p.setColor(QPalette::HighlightedText, txtClr);
+        setPalette(p);
+
+        ui -> tableWidget_Item -> setItemDelegate(m_delegate);
+        ui -> tableWidget_Item -> selectRow(numRow);
+        isBuild = true;
     }
-
-    qsp.setHorizontalPolicy(QSizePolicy::Expanding);
-
-    ui -> tableWidget_Item -> horizontalHeader() -> setSectionResizeMode(QHeaderView::Stretch);
-
-    p.setColor(QPalette::Highlight, hlClr);
-    p.setColor(QPalette::HighlightedText, txtClr);
-    setPalette(p);
-
-    ui -> tableWidget_Item -> setItemDelegate(m_delegate);
-    ui -> tableWidget_Item -> selectRow(numRow);
+    else
+        return;
 }
 
 void MainWindow::screenshot()
 {
-    Screenshot *scr = new Screenshot;
+    QPixmap pixmap(ui -> widget -> size());
+    ui -> widget -> render(&pixmap);
 
-    QTableWidgetItem *twi1 = ui -> tableWidget_Item -> item(numRow, 0);
-    QString date = twi1 ->text();
+    QString date,
+            route,
+            garage,
+            problem,
+            time;
 
-    QTableWidgetItem *twi2 = ui -> tableWidget_Item -> item(numRow, 1);
-    QString route = twi2 ->text();
+    if(isBuild)
+    {
+        QTableWidgetItem *twi1 = ui -> tableWidget_Item -> item(numRow, 0);
+        date = twi1 ->text();
 
-    QTableWidgetItem *twi3 = ui -> tableWidget_Item -> item(numRow, 5);
-    QString garage = twi3 ->text();
+        QTableWidgetItem *twi2 = ui -> tableWidget_Item -> item(numRow, 1);
+        route = twi2 ->text();
 
-    QTableWidgetItem *twi4 = ui -> tableWidget_Item -> item(numRow, 6);
-    QString problem = twi4 ->text();
+        QTableWidgetItem *twi3 = ui -> tableWidget_Item -> item(numRow, 5);
+        garage = twi3 ->text();
 
-    QTableWidgetItem *twi5 = ui -> tableWidget_Item -> item(numRow, 3);
-    QString time = twi5 ->text();
+        QTableWidgetItem *twi4 = ui -> tableWidget_Item -> item(numRow, 6);
+        problem = twi4 ->text();
 
-    scr -> shootScreen();
-    scr -> saveScreenshot(date, route, garage, time, problem);
+        QTableWidgetItem *twi5 = ui -> tableWidget_Item -> item(numRow, 3);
+        time = twi5 ->text();
+    }
 
-    QVector<int> rws = m_delegate -> rows();
+    const QString format = "jpg";
 
-    rws.push_back(numRow);
-    ++numRow;
+    QString screens = "Скрины",
+        dot = ".",
+        space = " ",
+        slash = "/",
+        name = time.replace(QString(":"), QString("_")) +
+               space + garage + space + problem + dot + format,
+        initialPath = QCoreApplication::applicationDirPath();
 
-    m_delegate -> setRows(rws);
-    ui -> tableWidget_Item -> update();
+    if (QDir(initialPath).mkdir(screens))
+    {
+        initialPath += slash + screens;
+        if(QDir(initialPath).mkdir(date))
+        {
+            initialPath += slash + date;
 
-    ui -> tableWidget_Item -> selectRow(numRow);
-    ui -> tableWidget_Item -> scrollToItem(
-        ui -> tableWidget_Item -> item(numRow + 2, 2));
+            if(QDir(initialPath).mkdir(route))
+                initialPath += slash + route;
+            else if(QDir(initialPath).cd(route))
+                initialPath += slash + route;
+            else
+                initialPath = QCoreApplication::applicationDirPath();
+        }
+        else if(QDir(initialPath).cd(date))
+        {
+            initialPath += slash + date;
 
-    Sleep(1000);
+            if(QDir(initialPath).mkdir(route))
+                initialPath += slash + route;
+            else if(QDir(initialPath).cd(route))
+                initialPath += slash + route;
+            else
+                initialPath = QCoreApplication::applicationDirPath();
+        }
+        else
+            initialPath = QCoreApplication::applicationDirPath();
+    }
+    else if(QDir(initialPath).cd(screens))
+    {
+        initialPath += slash + screens;
+        if(QDir(initialPath).mkdir(date))
+        {
+            initialPath += slash + date;
+
+            if(QDir(initialPath).mkdir(route))
+                initialPath += slash + route;
+            else if(QDir(initialPath).cd(route))
+                initialPath += slash + route;
+            else
+                initialPath = QCoreApplication::applicationDirPath();
+        }
+        else if(QDir(initialPath).cd(date))
+        {
+            initialPath += slash + date;
+
+            if(QDir(initialPath).mkdir(route))
+                initialPath += slash + route;
+            else if(QDir(initialPath).cd(route))
+                initialPath += slash + route;
+            else
+                initialPath = QCoreApplication::applicationDirPath();
+        }
+        else
+            initialPath = QCoreApplication::applicationDirPath();
+    }
+    else
+        initialPath = QCoreApplication::applicationDirPath();
+
+    initialPath += slash + name;
+
+    if(isBuild)
+    {
+        pixmap.save(initialPath);
+        QVector<int> rws = m_delegate -> rows();
+
+        rws.push_back(numRow);
+        ++numRow;
+
+        m_delegate -> setRows(rws);
+        ui -> tableWidget_Item -> update();
+
+        ui -> tableWidget_Item -> selectRow(numRow);
+        if(numRow + 2 != ui -> tableWidget_Item -> rowCount())
+            ui -> tableWidget_Item -> scrollToItem(
+                ui -> tableWidget_Item -> item(numRow + 2, 0));
+        else if(numRow + 1 != ui -> tableWidget_Item -> rowCount())
+            ui -> tableWidget_Item -> scrollToItem(
+                ui -> tableWidget_Item -> item(numRow + 1, 0));
+        else if(numRow != ui -> tableWidget_Item -> rowCount())
+            ui -> tableWidget_Item -> scrollToItem(
+                ui -> tableWidget_Item -> item(numRow, 0));
+        else
+            ui ->tableWidget_Item -> scrollToItem(
+                ui -> tableWidget_Item -> item(
+                    ui ->tableWidget_Item->rowCount(), 0));
+    }
+    else
+        pixmap.save("Без имени");
 }
 
 void MainWindow::web()
