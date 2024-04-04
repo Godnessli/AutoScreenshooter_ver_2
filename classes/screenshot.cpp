@@ -1,8 +1,9 @@
 #include <QtWidgets>
+#include <classes/delegate.h>
 #include <forms/mainwindow.h>
 #include "screenshot.h"
+#include "forms/mainwindow.h"
 
-//! [0]
 Screenshot::Screenshot()
     :  screenshotLabel(new QLabel(this))
 {
@@ -16,18 +17,14 @@ Screenshot::Screenshot()
     shootScreen();
 }
 
-void Screenshot::saveScreenshot()
+void Screenshot::saveScreenshot(QString date, QString route, QString garage, QString time, QString problem)
 {
+    MainWindow mw;
     shootScreen();
 
     const QString format = "jpg";
 
     QString screens = "Скрины",
-        date = "17.02",
-        route = "41",
-        problem = "ОБРЫВ БЛОКА ГЛОНАСС",
-        time = "20:12",
-        garage = "10612",
         dot = ".",
         space = " ",
         slash = "/",
@@ -96,7 +93,8 @@ void Screenshot::saveScreenshot()
 
     initialPath += slash + name;
 
-    if (!originalPixmap.save(initialPath, nullptr, 30)) {
+    if (!originalPixmap.save(initialPath, nullptr, 30))
+    {
         QMessageBox::warning(this, tr("Save Error"), tr("The image could not be saved to \"%1\".")
                                                          .arg(QDir::toNativeSeparators(initialPath)));
     }

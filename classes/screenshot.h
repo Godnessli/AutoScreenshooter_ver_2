@@ -14,7 +14,7 @@ class Screenshot : public QWidget
 public:
     Screenshot();
 
-    void saveScreenshot();
+    void saveScreenshot(QString date, QString route, QString garage, QString time, QString problem);
     void shootScreen();
 
 private:

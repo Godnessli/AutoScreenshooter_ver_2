@@ -1,10 +1,10 @@
 QT       += core gui widgets webenginewidgets webenginecore sql
 
-INCLUDEPATH = A:/Qt/xlnt_x64-windows/include
-LIBS += A:/Qt/xlnt_x64-windows/debug/lib/xlntd.lib
+#INCLUDEPATH = A:/Qt/xlnt_x64-windows/include
+#LIBS += A:/Qt/xlnt_x64-windows/debug/lib/xlntd.lib
 
-#INCLUDEPATH = C:/Users/kznts/vcpkg/packages/xlnt_x64-windows/include
-#LIBS += C:/Users/kznts/vcpkg/packages/xlnt_x64-windows/debug/lib/xlntd.lib
+INCLUDEPATH = C:/Users/kznts/vcpkg/packages/xlnt_x64-windows/include
+LIBS += C:/Users/kznts/vcpkg/packages/xlnt_x64-windows/debug/lib/xlntd.lib
 
 CONFIG += c++17
 
@@ -19,6 +19,7 @@ SOURCES += \
     main.cpp \
 
 HEADERS += \
+    classes/delegate.h \
     classes/screenshot.h \
     classes/table.h \
     forms/mainwindow.h
