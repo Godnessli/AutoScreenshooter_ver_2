@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include "classes/delegate.h"
+#include "classes/automate.h"
 #include <QMainWindow>
 #include <QPushButton>
 #include <QtWebEngineCore>
@@ -25,15 +26,20 @@ public:
 
     Delegate *m_delegate = new Delegate;
 
+public slots:
+    void screenshot();
+
 private slots:
     void buildTable();
-    void screenshot();
     void web();
-    void autoscr();
+
+    void on_autoBtn_clicked();
 
 private:
     bool isBuild = false;
     Ui::MainWindow *ui;
+    QThread thread;
+    Automate a;
 
 };
 #endif // MAINWINDOW_H

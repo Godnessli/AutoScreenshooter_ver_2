@@ -11,14 +11,22 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    qDebug() << "MainWindow get called from?: " << QThread::currentThreadId();
+
     QPushButton *ltb = ui ->loadTableBtn;
     QPushButton *screen = ui -> screenBtn;
-    QPushButton *autoBtn = ui -> autoBtn;
+
+    ui -> autoBtn -> setEnabled(false);
     ltb -> setAutoDefault(false);
     screen -> setAutoDefault(false);
+
     QObject::connect(ltb, &QPushButton::clicked, this, &MainWindow::buildTable);
     QObject::connect(screen, &QPushButton::clicked, this, &MainWindow::screenshot);
-    QObject::connect(autoBtn, &QPushButton::clicked, this, &MainWindow::autoscr);
+    connect(&thread, &QThread::started, &a, &Automate::screenshot);
+    connect(&a, &Automate::finished, &thread, &QThread::terminate);
+    a.moveToThread(&thread);
+
     web();
 }
 
@@ -76,9 +84,11 @@ void MainWindow::buildTable()
         p.setColor(QPalette::HighlightedText, txtClr);
         setPalette(p);
 
+        numRow = 0;
         ui -> tableWidget_Item -> setItemDelegate(m_delegate);
         ui -> tableWidget_Item -> selectRow(numRow);
         isBuild = true;
+        ui -> autoBtn -> setEnabled(true);
     }
     else
         return;
@@ -111,6 +121,8 @@ void MainWindow::screenshot()
 
         QTableWidgetItem *twi5 = ui -> tableWidget_Item -> item(numRow, 3);
         time = twi5 ->text();
+
+        ui -> tableWidget_Item -> item(numRow, 7) -> setText("Есть");
     }
 
     const QString format = "jpg";
@@ -189,6 +201,7 @@ void MainWindow::screenshot()
         pixmap.save(initialPath);
         QVector<int> rws = m_delegate -> rows();
 
+        numRow = ui -> tableWidget_Item -> currentRow();
         rws.push_back(numRow);
         ++numRow;
 
@@ -196,22 +209,35 @@ void MainWindow::screenshot()
         ui -> tableWidget_Item -> update();
 
         ui -> tableWidget_Item -> selectRow(numRow);
-        if(numRow + 2 != ui -> tableWidget_Item -> rowCount())
-            ui -> tableWidget_Item -> scrollToItem(
-                ui -> tableWidget_Item -> item(numRow + 2, 0));
-        else if(numRow + 1 != ui -> tableWidget_Item -> rowCount())
-            ui -> tableWidget_Item -> scrollToItem(
-                ui -> tableWidget_Item -> item(numRow + 1, 0));
-        else if(numRow != ui -> tableWidget_Item -> rowCount())
+        if(numRow!= ui -> tableWidget_Item -> rowCount())
             ui -> tableWidget_Item -> scrollToItem(
                 ui -> tableWidget_Item -> item(numRow, 0));
-        else
+        else {
             ui ->tableWidget_Item -> scrollToItem(
                 ui -> tableWidget_Item -> item(
                     ui ->tableWidget_Item->rowCount(), 0));
+            if (numRow == ui -> tableWidget_Item -> rowCount())
+            {
+                QString check = "";
+                numRow = 0;
+                for(int i = 0; i < ui -> tableWidget_Item -> rowCount(); ++i)
+                {
+                    QString data = ui -> tableWidget_Item -> item(i, 7) -> text();
+                    if(data == check)
+                    {
+                        numRow = i;
+                        ui -> tableWidget_Item -> selectRow(numRow);
+                        ui -> tableWidget_Item -> scrollToItem(
+                            ui -> tableWidget_Item -> item(numRow, 0));
+                        ui -> tableWidget_Item -> item(numRow, 0);
+                        break;
+                    }
+                }
+            }
+        }
     }
     else
-        pixmap.save("Без имени");
+        pixmap.save("Без имени.jpg");
 }
 
 void MainWindow::web()
@@ -228,10 +254,9 @@ void MainWindow::web()
     ui -> widget -> show();
 }
 
-void MainWindow::autoscr()
+void MainWindow::on_autoBtn_clicked()
 {
-    for(int i = 0; i < ui -> tableWidget_Item -> rowCount(); i++)
-    {
-        screenshot();
-    }
+    a.setRunning(true);
+    thread.start();
 }
+
