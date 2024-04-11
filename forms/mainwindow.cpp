@@ -103,44 +103,54 @@ void MainWindow::screenshot()
     else
         a.numRow = numRow;
 
-    QPixmap pixmap(ui -> widget -> size());
-    ui -> widget -> render(&pixmap);
-
-    QString date,
-            route,
-            garage,
-            problem,
-            time;
+    pixUpdate();
 
     if(isBuild)
     {
-        QTableWidgetItem *twi1 = ui -> tableWidget_Item -> item(numRow, 0);
-        date = twi1 ->text();
-
-        QTableWidgetItem *twi2 = ui -> tableWidget_Item -> item(numRow, 1);
-        route = twi2 ->text();
-
-        QTableWidgetItem *twi3 = ui -> tableWidget_Item -> item(numRow, 5);
-        garage = twi3 ->text();
-
-        QTableWidgetItem *twi4 = ui -> tableWidget_Item -> item(numRow, 6);
-        problem = twi4 ->text();
-
-        QTableWidgetItem *twi5 = ui -> tableWidget_Item -> item(numRow, 3);
-        time = twi5 ->text();
-
-        ui -> tableWidget_Item -> item(numRow, 7) -> setText("Есть");
+        filePath();
     }
 
-    const QString format = "jpg";
+    if(isBuild)
+    {
+        pixmap.save(initialPath);
+        tableNavigate();
+    }
+    else
+        pixmap.save("Без имени.jpg");
+}
 
-    QString screens = "Скрины",
-        dot = ".",
-        space = " ",
-        slash = "/",
-        name = time.replace(QString(":"), QString("_")) +
-               space + garage + space + problem + dot + format,
-        initialPath = QCoreApplication::applicationDirPath();
+void MainWindow::pixUpdate()
+{
+    QPixmap pix(ui -> widget -> size());
+    ui -> widget -> render(&pix);
+
+    pixmap = pix;
+    a.pixmap = pix;
+}
+
+void MainWindow::filePath()
+{
+    QTableWidgetItem *twi1 = ui -> tableWidget_Item -> item(numRow, 0);
+    date = twi1 ->text();
+
+    QTableWidgetItem *twi2 = ui -> tableWidget_Item -> item(numRow, 1);
+    route = twi2 ->text();
+
+    QTableWidgetItem *twi3 = ui -> tableWidget_Item -> item(numRow, 5);
+    garage = twi3 ->text();
+
+    QTableWidgetItem *twi4 = ui -> tableWidget_Item -> item(numRow, 6);
+    problem = twi4 ->text();
+
+    QTableWidgetItem *twi5 = ui -> tableWidget_Item -> item(numRow, 3);
+    time = twi5 ->text();
+
+    ui -> tableWidget_Item -> item(numRow, 7) -> setText("Есть");
+
+    name = time.replace(QString(":"), QString("_")) +
+           space + garage + space + problem + dot + format;
+
+    initialPath = QCoreApplication::applicationDirPath();
 
     if (QDir(initialPath).mkdir(screens))
     {
@@ -202,14 +212,7 @@ void MainWindow::screenshot()
         initialPath = QCoreApplication::applicationDirPath();
 
     initialPath += slash + name;
-
-    if(isBuild)
-    {
-        pixmap.save(initialPath);
-        tableNavigate();
-    }
-    else
-        pixmap.save("Без имени.jpg");
+    a.initialPath = initialPath;
 }
 
 void MainWindow::web()
@@ -299,9 +302,11 @@ void MainWindow::start()
     ui -> loadTableBtn -> setEnabled(false);
 
     connect(&thread, &QThread::started, &a, &Automate::screenshot);
-    connect(&a, SIGNAL(navigated()), &a, SLOT(screenshot()));
-    connect(&a, SIGNAL(screencreate()), this, SLOT(tableNavigate()));
 
+    connect(&a, SIGNAL(navigated()), &a, SLOT(screenshot()));
+    connect(&a, SIGNAL(navigated()), this, SLOT(pixUpdate()));
+    connect(&a, SIGNAL(screencreate()), this, SLOT(tableNavigate()));
+    connect(&a, SIGNAL(navigated()), this, SLOT(filePath()));
     connect(&a, SIGNAL(finished()), &thread, SLOT(terminate()));
     connect(&a, SIGNAL(finished()), this, SLOT(stop()));
     connect(&a, SIGNAL(wait()), &thread, SLOT(quit()));

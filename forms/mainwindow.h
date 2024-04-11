@@ -23,6 +23,7 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
     int numRow = 0;
+    QPixmap pixmap;
 
     Delegate *m_delegate = new Delegate;
 
@@ -30,6 +31,8 @@ public slots:
     void screenshot();
 
 private slots:
+    void pixUpdate();
+    void filePath();
     void buildTable();
     void web();
     void tableNavigate();
@@ -38,6 +41,20 @@ private slots:
     void stop();
 
 private:
+    QString date,
+            route,
+            garage,
+            problem,
+            time,
+            name,
+            initialPath;
+
+    const QString format = "jpg",
+                  screens = "Скрины",
+                  dot = ".",
+                  space = " ",
+                  slash = "/";
+
     bool isBuild = false;
     Ui::MainWindow *ui;
     QThread thread;

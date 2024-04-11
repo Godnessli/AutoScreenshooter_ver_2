@@ -28,6 +28,7 @@ void Automate::screenshot()
     else
     {
         qDebug() << "Row: " << numRow << "     Thread: " << QThread::currentThreadId();
+        pixmap.save(initialPath);
         ++numRow;
         emit screencreate();
     }

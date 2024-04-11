@@ -20,6 +20,8 @@ public:
     int rCount,
         numRow;
 
+    QString initialPath;
+
     QPixmap pixmap;
 
 signals:
