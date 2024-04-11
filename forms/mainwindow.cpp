@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "classes/table.h"
+#include "classes/requestinterceptor.h"
 #include "ui_mainwindow.h"
 #include "classes/delegate.h"
 #include <QtWidgets>
@@ -217,6 +218,9 @@ void MainWindow::filePath()
 
 void MainWindow::web()
 {
+    RequestInterceptor *ri = new RequestInterceptor();
+    QWebEngineProfile::defaultProfile() -> setUrlRequestInterceptor(ri);
+
     QWebEnginePage *page = new QWebEnginePage();
 
     page -> load(QUrl("https://webnavlo.nta.group/WNavSystemB"));

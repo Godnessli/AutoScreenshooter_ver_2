@@ -11,6 +11,7 @@ CONFIG += c++17
 
 SOURCES += \
     classes/automate.cpp \
+    classes/requestinterceptor.cpp \
     classes/table.cpp \
     forms/mainwindow.cpp \
     main.cpp \
@@ -18,6 +19,7 @@ SOURCES += \
 HEADERS += \
     classes/automate.h \
     classes/delegate.h \
+    classes/requestinterceptor.h \
     classes/table.h \
     forms/mainwindow.h
 
