@@ -32,8 +32,10 @@ public slots:
 private slots:
     void buildTable();
     void web();
-
+    void tableNavigate();
     void on_autoBtn_clicked();
+    void start();
+    void stop();
 
 private:
     bool isBuild = false;

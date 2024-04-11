@@ -23,9 +23,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     QObject::connect(ltb, &QPushButton::clicked, this, &MainWindow::buildTable);
     QObject::connect(screen, &QPushButton::clicked, this, &MainWindow::screenshot);
-    connect(&thread, &QThread::started, &a, &Automate::screenshot);
-    connect(&a, &Automate::finished, &thread, &QThread::terminate);
-    a.moveToThread(&thread);
+    a.setRunning(false);
 
     web();
 }
@@ -89,6 +87,7 @@ void MainWindow::buildTable()
         ui -> tableWidget_Item -> selectRow(numRow);
         isBuild = true;
         ui -> autoBtn -> setEnabled(true);
+        a.rCount = ui -> tableWidget_Item -> rowCount();
     }
     else
         return;
@@ -96,6 +95,14 @@ void MainWindow::buildTable()
 
 void MainWindow::screenshot()
 {
+    if (a.wasRun)
+    {
+        numRow = a.numRow;
+        a.wasRun = false;
+    }
+    else
+        a.numRow = numRow;
+
     QPixmap pixmap(ui -> widget -> size());
     ui -> widget -> render(&pixmap);
 
@@ -199,42 +206,7 @@ void MainWindow::screenshot()
     if(isBuild)
     {
         pixmap.save(initialPath);
-        QVector<int> rws = m_delegate -> rows();
-
-        numRow = ui -> tableWidget_Item -> currentRow();
-        rws.push_back(numRow);
-        ++numRow;
-
-        m_delegate -> setRows(rws);
-        ui -> tableWidget_Item -> update();
-
-        ui -> tableWidget_Item -> selectRow(numRow);
-        if(numRow!= ui -> tableWidget_Item -> rowCount())
-            ui -> tableWidget_Item -> scrollToItem(
-                ui -> tableWidget_Item -> item(numRow, 0));
-        else {
-            ui ->tableWidget_Item -> scrollToItem(
-                ui -> tableWidget_Item -> item(
-                    ui ->tableWidget_Item->rowCount(), 0));
-            if (numRow == ui -> tableWidget_Item -> rowCount())
-            {
-                QString check = "";
-                numRow = 0;
-                for(int i = 0; i < ui -> tableWidget_Item -> rowCount(); ++i)
-                {
-                    QString data = ui -> tableWidget_Item -> item(i, 7) -> text();
-                    if(data == check)
-                    {
-                        numRow = i;
-                        ui -> tableWidget_Item -> selectRow(numRow);
-                        ui -> tableWidget_Item -> scrollToItem(
-                            ui -> tableWidget_Item -> item(numRow, 0));
-                        ui -> tableWidget_Item -> item(numRow, 0);
-                        break;
-                    }
-                }
-            }
-        }
+        tableNavigate();
     }
     else
         pixmap.save("Без имени.jpg");
@@ -254,9 +226,105 @@ void MainWindow::web()
     ui -> widget -> show();
 }
 
+void MainWindow::tableNavigate()
+{
+    if (a.wasRun)
+        numRow = a.numRow;
+    else
+        a.numRow = numRow;
+
+    qDebug() << "Row: " << numRow << "     Thread: " << QThread::currentThreadId();
+    QVector<int> rws = m_delegate -> rows();
+
+    numRow = ui -> tableWidget_Item -> currentRow();
+    rws.push_back(numRow);
+    ++numRow;
+
+    m_delegate -> setRows(rws);
+    ui -> tableWidget_Item -> update();
+
+    ui -> tableWidget_Item -> selectRow(numRow);
+    if(numRow!= ui -> tableWidget_Item -> rowCount())
+        ui -> tableWidget_Item -> scrollToItem(
+            ui -> tableWidget_Item -> item(numRow, 0));
+    else {
+        ui ->tableWidget_Item -> scrollToItem(
+            ui -> tableWidget_Item -> item(
+                ui ->tableWidget_Item->rowCount(), 0));
+        if (numRow == ui -> tableWidget_Item -> rowCount())
+        {
+            QString check = "";
+            numRow = 0;
+            for(int i = 0; i < ui -> tableWidget_Item -> rowCount(); ++i)
+            {
+                QString data = ui -> tableWidget_Item -> item(i, 7) -> text();
+                if(data == check)
+                {
+                    numRow = i;
+                    ui -> tableWidget_Item -> selectRow(numRow);
+                    ui -> tableWidget_Item -> scrollToItem(
+                        ui -> tableWidget_Item -> item(numRow, 0));
+                    ui -> tableWidget_Item -> item(numRow, 0);
+                    break;
+                }
+            }
+        }
+    }
+    emit a.navigated();
+}
+
 void MainWindow::on_autoBtn_clicked()
 {
+    switch (a.running())
+    {
+    case false:
+        start();
+        break;
+
+    default:
+        emit a.wait();
+        stop();
+        break;
+    }
+}
+
+void MainWindow::start()
+{
+    a.moveToThread(&thread);
+    ui -> autoBtn -> setText("Стоп");
+
+    ui -> pushButton -> setEnabled(false);
+    ui -> pushButton_2 -> setEnabled(false);
+    ui -> screenBtn -> setEnabled(false);
+    ui -> loadTableBtn -> setEnabled(false);
+
+    connect(&thread, &QThread::started, &a, &Automate::screenshot);
+    connect(&a, SIGNAL(navigated()), &a, SLOT(screenshot()));
+    connect(&a, SIGNAL(screencreate()), this, SLOT(tableNavigate()));
+
+    connect(&a, SIGNAL(finished()), &thread, SLOT(terminate()));
+    connect(&a, SIGNAL(finished()), this, SLOT(stop()));
+    connect(&a, SIGNAL(wait()), &thread, SLOT(quit()));
+
     a.setRunning(true);
     thread.start();
 }
 
+void MainWindow::stop()
+{
+    a.setRunning(false);
+
+    ui -> pushButton -> setEnabled(true);
+    ui -> pushButton_2 -> setEnabled(true);
+    ui -> screenBtn -> setEnabled(true);
+    ui -> loadTableBtn -> setEnabled(true);
+    ui -> autoBtn -> setText("Автомат");
+
+    disconnect(&thread, &QThread::started, &a, &Automate::screenshot);
+    disconnect(&a, SIGNAL(navigated()), &a, SLOT(screenshot()));
+    disconnect(&a, SIGNAL(screencreate()), this, SLOT(tableNavigate()));
+
+    disconnect(&a, SIGNAL(finished()), &thread, SLOT(terminate()));
+    disconnect(&a, SIGNAL(finished()), this, SLOT(stop()));
+    disconnect(&a, SIGNAL(wait()), &thread, SLOT(quit()));
+}

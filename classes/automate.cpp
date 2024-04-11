@@ -21,10 +21,14 @@ void Automate::setRunning(bool running)
 
 void Automate::screenshot()
 {
-    while (i < ui -> tableWidget_Item -> rowCount())
+    if (numRow == rCount - 1)
     {
-        qDebug() << "this thread " << QThread::currentThreadId();
-        ++i;
+        emit finished();
     }
-    emit finished();
+    else
+    {
+        qDebug() << "Row: " << numRow << "     Thread: " << QThread::currentThreadId();
+        ++numRow;
+        emit screencreate();
+    }
 }
