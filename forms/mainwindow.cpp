@@ -5,6 +5,7 @@
 #include "classes/delegate.h"
 #include <QtWidgets>
 #include <QtWebEngineWidgets>
+#include <string>
 #include <windows.h>
 
 MainWindow::MainWindow(QWidget *parent)
@@ -17,13 +18,18 @@ MainWindow::MainWindow(QWidget *parent)
 
     QPushButton *ltb = ui ->loadTableBtn;
     QPushButton *screen = ui -> screenBtn;
+    QPushButton *buildTrack = ui -> buildTrack;
 
     ui -> autoBtn -> setEnabled(false);
+    ui -> buildTrack -> setEnabled(false);
+    ui -> openTable -> setEnabled(false);
+
     ltb -> setAutoDefault(false);
     screen -> setAutoDefault(false);
 
-    QObject::connect(ltb, &QPushButton::clicked, this, &MainWindow::buildTable);
-    QObject::connect(screen, &QPushButton::clicked, this, &MainWindow::screenshot);
+    connect(ltb, &QPushButton::clicked, this, &MainWindow::buildTable);
+    connect(screen, &QPushButton::clicked, this, &MainWindow::screenshot);
+    connect(buildTrack, &QPushButton::clicked, this, &MainWindow::selectDate);
     a.setRunning(false);
 
     web();
@@ -87,8 +93,13 @@ void MainWindow::buildTable()
         ui -> tableWidget_Item -> setItemDelegate(m_delegate);
         ui -> tableWidget_Item -> selectRow(numRow);
         isBuild = true;
+
         ui -> autoBtn -> setEnabled(true);
+        ui -> buildTrack -> setEnabled(true);
+        ui -> openTable -> setEnabled(true);
+
         a.rCount = ui -> tableWidget_Item -> rowCount();
+        date = ui -> tableWidget_Item -> item(numRow, 0) -> text();
     }
     else
         return;
@@ -231,6 +242,8 @@ void MainWindow::web()
 
     ui -> widget -> setPage(page);
     ui -> widget -> show();
+
+    connect(ui -> widget, &QWebEngineView::loadFinished, this, &MainWindow::enterName);
 }
 
 void MainWindow::tableNavigate()
@@ -300,8 +313,8 @@ void MainWindow::start()
     a.moveToThread(&thread);
     ui -> autoBtn -> setText("Стоп");
 
-    ui -> pushButton -> setEnabled(false);
-    ui -> pushButton_2 -> setEnabled(false);
+    ui -> buildTrack -> setEnabled(false);
+    ui -> openTable -> setEnabled(false);
     ui -> screenBtn -> setEnabled(false);
     ui -> loadTableBtn -> setEnabled(false);
 
@@ -323,8 +336,8 @@ void MainWindow::stop()
 {
     a.setRunning(false);
 
-    ui -> pushButton -> setEnabled(true);
-    ui -> pushButton_2 -> setEnabled(true);
+    ui -> buildTrack -> setEnabled(true);
+    ui -> openTable -> setEnabled(true);
     ui -> screenBtn -> setEnabled(true);
     ui -> loadTableBtn -> setEnabled(true);
     ui -> autoBtn -> setText("Автомат");
@@ -336,4 +349,58 @@ void MainWindow::stop()
     disconnect(&a, SIGNAL(finished()), &thread, SLOT(terminate()));
     disconnect(&a, SIGNAL(finished()), this, SLOT(stop()));
     disconnect(&a, SIGNAL(wait()), &thread, SLOT(quit()));
+}
+
+void MainWindow::enterName()
+{
+    ui -> widget -> page()
+        -> runJavaScript("$('#Login').val('KuznecovAV')");
+
+    ui -> widget -> page()
+        -> runJavaScript("$('#Password').val('1234')");
+
+    ui -> widget -> page()
+        -> runJavaScript("$('#Key').val('piteravto5')");
+
+    ui -> widget -> page()
+        -> runJavaScript("$('#signIn').click()");
+
+    disconnect(ui -> widget, &QWebEngineView::loadFinished, this, &MainWindow::enterName);
+    connect(ui -> widget, &QWebEngineView::loadFinished, this, &MainWindow::openStory);
+
+}
+
+void MainWindow::openStory()
+{
+    ui -> widget -> page()
+        -> runJavaScript("$('#tabs-page-headers')[0].children[2].children[0].click()");
+
+    disconnect(ui -> widget, &QWebEngineView::loadFinished, this, &MainWindow::openStory);
+
+
+    emit storyOpen();
+}
+
+void MainWindow::selectDate()
+{
+    QString datefix = date.sliced(6) + "-" + date.sliced(3, 2) + "-" + date.sliced(0, 2);
+
+    QString var = "$('#history-date').val('" + datefix + "')";
+    ui -> widget -> page()
+        -> runJavaScript(var);
+
+    ui -> widget -> page()
+        -> runJavaScript("$('#history-tab-all').click()");
+
+    ui -> widget -> page()
+        -> runJavaScript("$('#load-transport-history').click()");
+
+    connect(ui -> widget, &QWebEngineView::loadFinished, this, &MainWindow::buildTrack);
+    emit dateSelected();
+}
+
+void MainWindow::buildTrack()
+{
+    ui -> widget -> page()
+        -> runJavaScript("$('#history-tab-all').click()");
 }

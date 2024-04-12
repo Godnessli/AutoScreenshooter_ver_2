@@ -50,7 +50,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton">
+       <widget class="QPushButton" name="buildTrack">
         <property name="minimumSize">
          <size>
           <width>0</width>
@@ -80,7 +80,7 @@
        </layout>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton_2">
+       <widget class="QPushButton" name="openTable">
         <property name="minimumSize">
          <size>
           <width>0</width>

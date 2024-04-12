@@ -39,15 +39,22 @@ private slots:
     void on_autoBtn_clicked();
     void start();
     void stop();
+    void enterName();
+    void openStory();
+    void selectDate();
+    void buildTrack();
 
 private:
+    QLineEdit *locationEdit;
+
     QString date,
             route,
             garage,
             problem,
             time,
             name,
-            initialPath;
+            initialPath,
+            jQuery;
 
     const QString format = "jpg",
                   screens = "Скрины",
@@ -59,6 +66,11 @@ private:
     Ui::MainWindow *ui;
     QThread thread;
     Automate a;
+
+signals:
+    void nextPageOpen();
+    void storyOpen();
+    void dateSelected();
 
 };
 #endif // MAINWINDOW_H

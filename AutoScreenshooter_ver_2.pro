@@ -4,8 +4,8 @@ QT       += core gui widgets webenginewidgets webenginecore sql
 #LIBS += A:/Qt/xlnt_x64-windows/debug/lib/xlntd.lib
 
 INCLUDEPATH = C:/Users/kznts/vcpkg/packages/xlnt_x64-windows/include
-LIBS += C:/Users/kznts/vcpkg/packages/xlnt_x64-windows/debug/lib/xlntd.lib
-#LIBS += C:/Users/kznts/vcpkg/packages/xlnt_x64-windows/lib/xlnt.lib
+#LIBS += C:/Users/kznts/vcpkg/packages/xlnt_x64-windows/debug/lib/xlntd.lib
+LIBS += C:/Users/kznts/vcpkg/packages/xlnt_x64-windows/lib/xlnt.lib
 
 CONFIG += c++17
 
