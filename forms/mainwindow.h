@@ -41,7 +41,7 @@ private slots:
     void stop();
     void enterName();
     void openStory();
-    void selectDate();
+    void selectGarage();
     void buildTrack();
 
 private:
@@ -68,9 +68,9 @@ private:
     Automate a;
 
 signals:
-    void nextPageOpen();
-    void storyOpen();
+    void tableLoaded();
     void dateSelected();
+    void garageSelected();
 
 };
 #endif // MAINWINDOW_H

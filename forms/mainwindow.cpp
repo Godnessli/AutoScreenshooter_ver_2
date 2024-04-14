@@ -5,7 +5,6 @@
 #include "classes/delegate.h"
 #include <QtWidgets>
 #include <QtWebEngineWidgets>
-#include <string>
 #include <windows.h>
 
 MainWindow::MainWindow(QWidget *parent)
@@ -29,7 +28,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(ltb, &QPushButton::clicked, this, &MainWindow::buildTable);
     connect(screen, &QPushButton::clicked, this, &MainWindow::screenshot);
-    connect(buildTrack, &QPushButton::clicked, this, &MainWindow::selectDate);
+    connect(buildTrack, &QPushButton::clicked, this, &MainWindow::selectGarage);
+    connect(this, &MainWindow::tableLoaded, this, &MainWindow::openStory);
+
     a.setRunning(false);
 
     web();
@@ -100,6 +101,8 @@ void MainWindow::buildTable()
 
         a.rCount = ui -> tableWidget_Item -> rowCount();
         date = ui -> tableWidget_Item -> item(numRow, 0) -> text();
+
+        emit tableLoaded();
     }
     else
         return;
@@ -366,7 +369,6 @@ void MainWindow::enterName()
         -> runJavaScript("$('#signIn').click()");
 
     disconnect(ui -> widget, &QWebEngineView::loadFinished, this, &MainWindow::enterName);
-    connect(ui -> widget, &QWebEngineView::loadFinished, this, &MainWindow::openStory);
 
 }
 
@@ -375,14 +377,6 @@ void MainWindow::openStory()
     ui -> widget -> page()
         -> runJavaScript("$('#tabs-page-headers')[0].children[2].children[0].click()");
 
-    disconnect(ui -> widget, &QWebEngineView::loadFinished, this, &MainWindow::openStory);
-
-
-    emit storyOpen();
-}
-
-void MainWindow::selectDate()
-{
     QString datefix = date.sliced(6) + "-" + date.sliced(3, 2) + "-" + date.sliced(0, 2);
 
     QString var = "$('#history-date').val('" + datefix + "')";
@@ -394,13 +388,29 @@ void MainWindow::selectDate()
 
     ui -> widget -> page()
         -> runJavaScript("$('#load-transport-history').click()");
+}
 
-    connect(ui -> widget, &QWebEngineView::loadFinished, this, &MainWindow::buildTrack);
-    emit dateSelected();
+void MainWindow::selectGarage()
+{
+    ui -> widget -> page()
+        -> runJavaScript("$('#history_select_all_ts_chosen').mousedown()");
+
+    Sleep(2000);
+
+    ui -> widget -> page()
+        -> runJavaScript("$('.chosen-results li:contains(10142)').mouseup()");
+
+    Sleep(1000);
+
+    ui -> widget -> page()
+        -> runJavaScript("$('#history-load-navigation').click()");
 }
 
 void MainWindow::buildTrack()
 {
+    QKeyEvent *event = new QKeyEvent ( QEvent::KeyPress, Qt::Key_Enter, Qt::NoModifier);
+    QCoreApplication::postEvent(ui -> widget, event);
+
     ui -> widget -> page()
-        -> runJavaScript("$('#history-tab-all').click()");
+        -> runJavaScript("$('#history-load-navigation').click()");
 }
