@@ -29,6 +29,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ltb, &QPushButton::clicked, this, &MainWindow::buildTable);
     connect(screen, &QPushButton::clicked, this, &MainWindow::screenshot);
     connect(buildTrack, &QPushButton::clicked, this, &MainWindow::selectGarage);
+    connect(this, &MainWindow::garageSelected, this, &MainWindow::buildTrack);
     connect(this, &MainWindow::tableLoaded, this, &MainWindow::openStory);
 
     a.setRunning(false);
@@ -404,13 +405,54 @@ void MainWindow::selectGarage()
 
     ui -> widget -> page()
         -> runJavaScript("$('#history-load-navigation').click()");
+
+    Sleep(3000);
+
+    emit garageSelected();
 }
 
 void MainWindow::buildTrack()
 {
-    QKeyEvent *event = new QKeyEvent ( QEvent::KeyPress, Qt::Key_Enter, Qt::NoModifier);
-    QCoreApplication::postEvent(ui -> widget, event);
-
     ui -> widget -> page()
-        -> runJavaScript("$('#history-load-navigation').click()");
+        -> runJavaScript("let simulate = new MouseEvent('click', {"
+                        "shiftKey: true,"
+                        "bubbles: true"
+                        "});"
+
+                        "let TS = {"
+                        "date: $('#history-date')[0].value,"
+                        "uniqueID: $('#history-select-all-ts option:contains(10142)')[0].value"
+                        "}"
+
+                        "var data = [];"
+
+                        "var response = await fetch('https://webnavlo.nta.group/WNavSystemB/Map/GetHistoryNavigation', {"
+                        "method: 'POST',"
+                        "headers: {"
+                        "'Content-Type': 'application/json; charset=utf-8'"
+                        "},"
+                        "body: JSON.stringify(TS),"
+                        "}).then(async (response) => {"
+                        "data = await response.json();"
+                        "console.log(data)"
+                        "})"
+
+                        "function pointIndex (timeOfPoint) {"
+                        "for (var i = 0; i < data.length; i++)"
+                        "{"
+                        "var point = data[i].timeNav.split('');"
+                        "var time = point.slice(11, 16);"
+                        "var strtime = time.toString();"
+                        "if(strtime.replaceAll(',', '') === timeOfPoint) {"
+                        "return i;"
+                        "break;"
+                        "}"
+                        "}"
+                        "}"
+
+                        "var start = pointIndex('17:00')"
+                        "var end = pointIndex('18:00')"
+
+                        "$(`#history-navigation-table tbody [index = ${start}]`).click()"
+                        "$(`#history-navigation-table tbody [index = ${end}]`)[0].dispatchEvent(simulate) ");
 }
