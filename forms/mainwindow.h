@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include "classes/delegate.h"
+#include "classes/requestinterceptor.h"
 #include "classes/automate.h"
 #include <QMainWindow>
 #include <QPushButton>
@@ -26,6 +27,7 @@ public:
     QPixmap pixmap;
 
     Delegate *m_delegate = new Delegate;
+    RequestInterceptor *ri = new RequestInterceptor();
 
 public slots:
     void screenshot();
@@ -41,11 +43,17 @@ private slots:
     void stop();
     void enterName();
     void openStory();
-    void selectGarage();
     void buildTrack();
+    void request();
+    void response(QNetworkReply *reply);
+   // void showTrack();
 
 private:
     QLineEdit *locationEdit;
+
+    QJsonDocument jsonList;
+
+    QString loginScript;
 
     QString date,
             route,
@@ -69,7 +77,7 @@ private:
 
 signals:
     void tableLoaded();
-    void dateSelected();
+    void responsed();
     void garageSelected();
 
 };

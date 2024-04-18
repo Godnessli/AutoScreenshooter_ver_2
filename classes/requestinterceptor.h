@@ -11,6 +11,8 @@ public:
     RequestInterceptor(QObject *parent = Q_NULLPTR);
 
     void interceptRequest(QWebEngineUrlRequestInfo &info);
+
+    QHash<QByteArray, QByteArray> requestHeader;
 };
 
 #endif // REQUESTINTERCEPTOR_H

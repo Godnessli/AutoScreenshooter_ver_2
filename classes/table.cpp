@@ -19,12 +19,10 @@ void Table::getpath()
 
 bool Table::check(const QString &path)
 {
-    QString check = "";
-
-    if (path == check)
-        return false;
-    else
+    if (path != QString(""))
         return true;
+    else
+        return false;
 }
 
 QVector<QVector<QString>> Table::readtable()

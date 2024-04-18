@@ -28,9 +28,10 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(ltb, &QPushButton::clicked, this, &MainWindow::buildTable);
     connect(screen, &QPushButton::clicked, this, &MainWindow::screenshot);
-    connect(buildTrack, &QPushButton::clicked, this, &MainWindow::selectGarage);
-    connect(this, &MainWindow::garageSelected, this, &MainWindow::buildTrack);
+    connect(buildTrack, &QPushButton::clicked, this, &MainWindow::buildTrack);
     connect(this, &MainWindow::tableLoaded, this, &MainWindow::openStory);
+    connect(this, &MainWindow::garageSelected, this, &MainWindow::request);
+    //connect(this, &MainWindow::responsed, this, &MainWindow::response);
 
     a.setRunning(false);
 
@@ -102,6 +103,8 @@ void MainWindow::buildTable()
 
         a.rCount = ui -> tableWidget_Item -> rowCount();
         date = ui -> tableWidget_Item -> item(numRow, 0) -> text();
+        time = ui -> tableWidget_Item -> item(numRow, 3) -> text();
+        garage = ui -> tableWidget_Item -> item(numRow, 5) -> text();
 
         emit tableLoaded();
     }
@@ -233,16 +236,13 @@ void MainWindow::filePath()
 
 void MainWindow::web()
 {
-    RequestInterceptor *ri = new RequestInterceptor();
     QWebEngineProfile::defaultProfile() -> setUrlRequestInterceptor(ri);
-
     QWebEnginePage *page = new QWebEnginePage();
 
     page -> load(QUrl("https://webnavlo.nta.group/WNavSystemB"));
 
     QObject::connect(page, &QWebEnginePage::certificateError,
                      [](QWebEngineCertificateError e) { e.acceptCertificate(); });
-
 
     ui -> widget -> setPage(page);
     ui -> widget -> show();
@@ -357,102 +357,118 @@ void MainWindow::stop()
 
 void MainWindow::enterName()
 {
-    ui -> widget -> page()
-        -> runJavaScript("$('#Login').val('KuznecovAV')");
+    QString jscodeLogin = QStringLiteral(
+        R"DELIM(
+            $("#Login").val("KuznecovAV");
+            $('#Password').val('1234');
+            $('#Key').val('piteravto5');
+            $('#signIn').click();
+        )DELIM");
 
-    ui -> widget -> page()
-        -> runJavaScript("$('#Password').val('1234')");
-
-    ui -> widget -> page()
-        -> runJavaScript("$('#Key').val('piteravto5')");
-
-    ui -> widget -> page()
-        -> runJavaScript("$('#signIn').click()");
-
+    ui -> widget -> page() -> runJavaScript(jscodeLogin);
     disconnect(ui -> widget, &QWebEngineView::loadFinished, this, &MainWindow::enterName);
 
 }
 
 void MainWindow::openStory()
 {
-    ui -> widget -> page()
-        -> runJavaScript("$('#tabs-page-headers')[0].children[2].children[0].click()");
-
     QString datefix = date.sliced(6) + "-" + date.sliced(3, 2) + "-" + date.sliced(0, 2);
 
-    QString var = "$('#history-date').val('" + datefix + "')";
-    ui -> widget -> page()
-        -> runJavaScript(var);
+    QString jscodeOpenStory =
+        R"DELIM(
+            $('#tabs-page-headers')[0].children[2].children[0].click()
+            $('#history-date').val('datefix')
+            $('#history-tab-all').click()
+            $('#load-transport-history').click()
+
+            var simulate = new MouseEvent('click', {
+                shiftKey: true,
+                bubbles: true
+            });
+
+            function pointIndex (timeOfPoint) {
+                for (var i = 0; i < data.length; i++)
+                {
+                    var point = data[i].timeNav.split('');
+                    var time = point.slice(11, 16);
+                    var strtime = time.toString();
+                    if(strtime.replaceAll(',', '') === timeOfPoint) {
+                        return i;
+                        break;
+                    }
+                }
+            }
+
+            $('#history_select_all_ts_chosen').mousedown()
+            $('.chosen-results li:contains(10142)').mouseup()
+            $('#history-load-navigation').click()
+        )DELIM";
+    jscodeOpenStory.replace("datefix", datefix);
 
     ui -> widget -> page()
-        -> runJavaScript("$('#history-tab-all').click()");
-
-    ui -> widget -> page()
-        -> runJavaScript("$('#load-transport-history').click()");
-}
-
-void MainWindow::selectGarage()
-{
-    ui -> widget -> page()
-        -> runJavaScript("$('#history_select_all_ts_chosen').mousedown()");
-
-    Sleep(2000);
-
-    ui -> widget -> page()
-        -> runJavaScript("$('.chosen-results li:contains(10142)').mouseup()");
-
-    Sleep(1000);
-
-    ui -> widget -> page()
-        -> runJavaScript("$('#history-load-navigation').click()");
-
-    Sleep(3000);
-
-    emit garageSelected();
+        -> runJavaScript(jscodeOpenStory);
 }
 
 void MainWindow::buildTrack()
 {
+    QString jscodeBuildTrack =
+        R"(
+            var simulate = new MouseEvent('click', {
+                shiftKey: true,
+                bubbles: true
+            });
+
+            var data = [];
+
+            var TS = {
+                date: $("#history-date")[0].value,
+                uniqueID: $('#history-select-all-ts option:contains(10142)')[0].value
+            }
+
+            var response = fetch('https://webnavlo.nta.group/WNavSystemB/Map/GetHistoryNavigation', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json; charset=utf-8'
+                },
+                body: JSON.stringify(TS),
+            }).then(async (response) => {
+                data = await response.json();
+                console.log(data)
+            })
+
+            var start = pointIndex("17:00")
+            var end = pointIndex("18:00")
+
+            $(`#history-navigation-table tbody [index = ${start}]`)[0].click()
+            $(`#history-navigation-table tbody [index = ${end}]`)[0].dispatchEvent(simulate)
+        )";
+
+    //jscodeBuildTrack.replace("garagenum", garage);
+    //jscodeBuildTrack.replace("StartTime", time);
+
+    QTime startTime = QTime::fromString(time, "hh:mm");
+    int hour = startTime.hour();
+    int minute = startTime.minute();
+    hour += 1;
+
+    QTime endTime(hour, minute);
+    QString endTimeStr = endTime.toString();
+    //jscodeBuildTrack.replace("EndTime", endTimeStr.sliced(0, 5));
+
     ui -> widget -> page()
-        -> runJavaScript("let simulate = new MouseEvent('click', {"
-                        "shiftKey: true,"
-                        "bubbles: true"
-                        "});"
+        -> runJavaScript(jscodeBuildTrack);
 
-                        "let TS = {"
-                        "date: $('#history-date')[0].value,"
-                        "uniqueID: $('#history-select-all-ts option:contains(10142)')[0].value"
-                        "}"
+    connect(ui -> widget -> page(), &QWebEnginePage::loadFinished, this, &MainWindow::request);
+    connect(ui -> widget, &QWebEngineView::loadFinished, this, &MainWindow::request);
+}
 
-                        "var data = [];"
+void MainWindow::request()
+{
 
-                        "var response = await fetch('https://webnavlo.nta.group/WNavSystemB/Map/GetHistoryNavigation', {"
-                        "method: 'POST',"
-                        "headers: {"
-                        "'Content-Type': 'application/json; charset=utf-8'"
-                        "},"
-                        "body: JSON.stringify(TS),"
-                        "}).then(async (response) => {"
-                        "data = await response.json();"
-                        "console.log(data)"
-                        "})"
+    disconnect(ui -> widget, &QWebEngineView::loadFinished, this, &MainWindow::request);
+}
 
-                        "function pointIndex (timeOfPoint) {"
-                        "for (var i = 0; i < data.length; i++)"
-                        "{"
-                        "var point = data[i].timeNav.split('');"
-                        "var time = point.slice(11, 16);"
-                        "var strtime = time.toString();"
-                        "if(strtime.replaceAll(',', '') === timeOfPoint) {"
-                        "return i;"
-                        "break;"
-                        "}"
-                        "}"
-                        "}"
+void MainWindow::response(QNetworkReply *reply)
+{
 
-                        "var start = pointIndex('17:00')"
-                        "var end = pointIndex('18:00')"
-
-                        "$(`#history-navigation-table tbody [index = ${start}]`).click()"
-                        "$(`#history-navigation-table tbody [index = ${end}]`)[0].dispatchEvent(simulate) ");
 }
