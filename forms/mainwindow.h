@@ -44,8 +44,7 @@ private slots:
     void enterName();
     void openStory();
     void buildTrack();
-    void request();
-    void response(QNetworkReply *reply);
+    void buildRoute();
    // void showTrack();
 
 private:
@@ -61,8 +60,7 @@ private:
             problem,
             time,
             name,
-            initialPath,
-            jQuery;
+            initialPath;
 
     const QString format = "jpg",
                   screens = "Скрины",

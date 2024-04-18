@@ -30,8 +30,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(screen, &QPushButton::clicked, this, &MainWindow::screenshot);
     connect(buildTrack, &QPushButton::clicked, this, &MainWindow::buildTrack);
     connect(this, &MainWindow::tableLoaded, this, &MainWindow::openStory);
-    connect(this, &MainWindow::garageSelected, this, &MainWindow::request);
-    //connect(this, &MainWindow::responsed, this, &MainWindow::response);
+    connect(this, &MainWindow::garageSelected, this, &MainWindow::buildRoute);
 
     a.setRunning(false);
 
@@ -247,6 +246,19 @@ void MainWindow::web()
     ui -> widget -> setPage(page);
     ui -> widget -> show();
 
+    QWebEngineScript logIn;
+    logIn.setInjectionPoint(QWebEngineScript::DocumentReady);
+    logIn.setWorldId(QWebEngineScript::MainWorld);
+    logIn.setName("user_login.js");
+    logIn.setRunsOnSubFrames(true);
+    logIn.setSourceCode(QStringLiteral(
+        R"DELIM($("#Login").val("KuznecovAV");
+$('#Password').val('1234');
+$('#Key').val('piteravto5');
+$('#signIn').click();)DELIM"));
+
+    ui -> widget -> page() -> scripts().insert(logIn);
+
     connect(ui -> widget, &QWebEngineView::loadFinished, this, &MainWindow::enterName);
 }
 
@@ -357,118 +369,139 @@ void MainWindow::stop()
 
 void MainWindow::enterName()
 {
-    QString jscodeLogin = QStringLiteral(
-        R"DELIM(
-            $("#Login").val("KuznecovAV");
-            $('#Password').val('1234');
-            $('#Key').val('piteravto5');
-            $('#signIn').click();
-        )DELIM");
+    /*QWebEngineScript logIn;
+    logIn.setInjectionPoint(QWebEngineScript::DocumentReady);
+    logIn.setWorldId(QWebEngineScript::MainWorld);
+    logIn.setName("user_login.js");
+    logIn.setRunsOnSubFrames(true);
+    logIn.setSourceCode(QStringLiteral(
+R"DELIM($("#Login").val("KuznecovAV");
+$('#Password').val('1234');
+$('#Key').val('piteravto5');
+$('#signIn').click();)DELIM"));
 
-    ui -> widget -> page() -> runJavaScript(jscodeLogin);
+    ui -> widget -> page() -> scripts().insert(logIn);*/
+
     disconnect(ui -> widget, &QWebEngineView::loadFinished, this, &MainWindow::enterName);
-
 }
 
 void MainWindow::openStory()
 {
+    QString jscodeSetDate =
+R"DELIM($('#tabs-page-headers')[0].children[2].children[0].click();
+$('#history-date').val('datefix');
+$('#history-tab-all').click();
+$('#load-transport-history').click();)DELIM";
+
     QString datefix = date.sliced(6) + "-" + date.sliced(3, 2) + "-" + date.sliced(0, 2);
+    jscodeSetDate.replace("datefix", datefix);
 
-    QString jscodeOpenStory =
-        R"DELIM(
-            $('#tabs-page-headers')[0].children[2].children[0].click()
-            $('#history-date').val('datefix')
-            $('#history-tab-all').click()
-            $('#load-transport-history').click()
-
-            var simulate = new MouseEvent('click', {
-                shiftKey: true,
-                bubbles: true
-            });
-
-            function pointIndex (timeOfPoint) {
-                for (var i = 0; i < data.length; i++)
-                {
-                    var point = data[i].timeNav.split('');
-                    var time = point.slice(11, 16);
-                    var strtime = time.toString();
-                    if(strtime.replaceAll(',', '') === timeOfPoint) {
-                        return i;
-                        break;
-                    }
-                }
-            }
-
-            $('#history_select_all_ts_chosen').mousedown()
-            $('.chosen-results li:contains(10142)').mouseup()
-            $('#history-load-navigation').click()
-        )DELIM";
-    jscodeOpenStory.replace("datefix", datefix);
-
-    ui -> widget -> page()
-        -> runJavaScript(jscodeOpenStory);
+    ui -> widget -> page() -> runJavaScript(jscodeSetDate);
 }
 
 void MainWindow::buildTrack()
 {
-    QString jscodeBuildTrack =
-        R"(
-            var simulate = new MouseEvent('click', {
-                shiftKey: true,
-                bubbles: true
-            });
+    QString jscodeShowTrack =
+R"($("#history_select_all_ts_chosen").mousedown();
+$('.chosen-results li:contains(10182)').mouseup();
+$("#history-load-navigation").click();
 
-            var data = [];
+var data = [];
 
-            var TS = {
-                date: $("#history-date")[0].value,
-                uniqueID: $('#history-select-all-ts option:contains(10142)')[0].value
-            }
+var TS = {
+    date: $("#history-date")[0].value,
+    uniqueID: $('#history-select-all-ts option:contains(10182)')[0].value
+}
 
-            var response = fetch('https://webnavlo.nta.group/WNavSystemB/Map/GetHistoryNavigation', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json; charset=utf-8'
-                },
-                body: JSON.stringify(TS),
-            }).then(async (response) => {
-                data = await response.json();
-                console.log(data)
-            })
+var response = fetch('https://webnavlo.nta.group/WNavSystemB/Map/GetHistoryNavigation', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json; charset=utf-8'
+    },
+    body: JSON.stringify(TS),
+}).then(async (response) => {
+    data = await response.json();
+    console.log(data);
+})
 
-            var start = pointIndex("17:00")
-            var end = pointIndex("18:00")
+var simulate = new MouseEvent('click', {
+    shiftKey: true,
+    bubbles: true
+});
 
-            $(`#history-navigation-table tbody [index = ${start}]`)[0].click()
-            $(`#history-navigation-table tbody [index = ${end}]`)[0].dispatchEvent(simulate)
-        )";
+function pointIndex (timeOfPoint) {
+    for (var i = 0; i < data.length; i++)
+    {
+        var point = data[i].timeNav.split('');
+        var time = point.slice(11, 16);
+        var strtime = time.toString();
+        if(strtime.replaceAll(',', '') === timeOfPoint) {
+            return i;
+            break;
+        }
+    }
+})";
 
     //jscodeBuildTrack.replace("garagenum", garage);
     //jscodeBuildTrack.replace("StartTime", time);
 
-    QTime startTime = QTime::fromString(time, "hh:mm");
-    int hour = startTime.hour();
-    int minute = startTime.minute();
-    hour += 1;
+    //QTime startTime = QTime::fromString(time, "hh:mm");
+    //int hour = startTime.hour();
+    //int minute = startTime.minute();
+    //hour += 1;
 
-    QTime endTime(hour, minute);
-    QString endTimeStr = endTime.toString();
+    //QTime endTime(hour, minute);
+    //QString endTimeStr = endTime.toString();
     //jscodeBuildTrack.replace("EndTime", endTimeStr.sliced(0, 5));
 
-    ui -> widget -> page()
-        -> runJavaScript(jscodeBuildTrack);
+    /*QWebEngineScript showTrack;
+    showTrack.setInjectionPoint(QWebEngineScript::Deferred);
+    showTrack.setWorldId(QWebEngineScript::MainWorld);
+    showTrack.setName("show_track.js");
+    showTrack.setRunsOnSubFrames(true);
+    showTrack.setSourceCode(jscodeShowTrack);
 
-    connect(ui -> widget -> page(), &QWebEnginePage::loadFinished, this, &MainWindow::request);
-    connect(ui -> widget, &QWebEngineView::loadFinished, this, &MainWindow::request);
+    ui -> widget -> page() -> scripts().insert(showTrack);*/
+    ui -> widget -> page() -> runJavaScript(jscodeShowTrack);
+
+    Sleep(2000);
+    emit garageSelected();
 }
 
-void MainWindow::request()
+void MainWindow::buildRoute()
 {
+    ui -> widget -> page() -> runJavaScript("var start = pointIndex('17:00');"
+                                          "var end = pointIndex('18:00');"
 
-    disconnect(ui -> widget, &QWebEngineView::loadFinished, this, &MainWindow::request);
-}
+                                          "$(`#history-navigation-table tbody [index = ${start}]`).click();"
+                                          "$(`#history-navigation-table tbody [index = ${end}]`)[0].dispatchEvent(simulate);");
 
-void MainWindow::response(QNetworkReply *reply)
-{
+    QString jscodeShowRoute =
+R"DELIM($('#tabs-page-headers')[0].children[0].children[0].click();
+$('#tabs-page1 div:contains(370)')[0].click();
+$('#choose-transport-action-tracking-marsh')[0].click();
+$('#map')[0].children[3].children[5].style.display = "none";
+$('#map')[0].children[3].children[6].style.display = "block";)DELIM";
 
+    QWebEngineScript showRoute;
+    showRoute.setInjectionPoint(QWebEngineScript::DocumentReady);
+    showRoute.setWorldId(QWebEngineScript::MainWorld);
+    showRoute.setName("show_route.js");
+    showRoute.setRunsOnSubFrames(true);
+    showRoute.setSourceCode(jscodeShowRoute);
+
+    ui -> widget -> page() -> scripts().insert(showRoute);
+
+    QWebEngineScript showCarNumber;
+    showCarNumber.setInjectionPoint(QWebEngineScript::DocumentReady);
+    showCarNumber.setWorldId(QWebEngineScript::MainWorld);
+    showCarNumber.setName("show_car_number.js");
+    showCarNumber.setRunsOnSubFrames(true);
+    showCarNumber.setSourceCode(
+R"DELIM($('#tabs-page-headers')[0].children[2].children[0].click()
+$('#tabs-page3')[0].scrollTo(0,0);)DELIM");
+
+    ui -> widget -> page() -> scripts().insert(showCarNumber);
+
+    disconnect(ui -> widget, &QWebEngineView::loadFinished, this, &MainWindow::buildRoute);
 }
