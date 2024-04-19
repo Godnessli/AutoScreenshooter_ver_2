@@ -30,7 +30,6 @@ MainWindow::MainWindow(QWidget *parent)
     connect(screen, &QPushButton::clicked, this, &MainWindow::screenshot);
     connect(buildTrack, &QPushButton::clicked, this, &MainWindow::buildTrack);
     connect(this, &MainWindow::tableLoaded, this, &MainWindow::openStory);
-    connect(this, &MainWindow::garageSelected, this, &MainWindow::buildRoute);
 
     a.setRunning(false);
 
@@ -104,6 +103,7 @@ void MainWindow::buildTable()
         date = ui -> tableWidget_Item -> item(numRow, 0) -> text();
         time = ui -> tableWidget_Item -> item(numRow, 3) -> text();
         garage = ui -> tableWidget_Item -> item(numRow, 5) -> text();
+        route = ui -> tableWidget_Item -> item(numRow, 1) -> text();
 
         emit tableLoaded();
     }
@@ -269,12 +269,17 @@ void MainWindow::tableNavigate()
     else
         a.numRow = numRow;
 
-    qDebug() << "Row: " << numRow << "     Thread: " << QThread::currentThreadId();
     QVector<int> rws = m_delegate -> rows();
 
     numRow = ui -> tableWidget_Item -> currentRow();
     rws.push_back(numRow);
+
     ++numRow;
+
+    date = ui -> tableWidget_Item -> item(numRow, 0) -> text();
+    time = ui -> tableWidget_Item -> item(numRow, 3) -> text();
+    garage = ui -> tableWidget_Item -> item(numRow, 5) -> text();
+    route = ui -> tableWidget_Item -> item(numRow, 1) -> text();
 
     m_delegate -> setRows(rws);
     ui -> tableWidget_Item -> update();
@@ -334,9 +339,9 @@ void MainWindow::start()
     ui -> screenBtn -> setEnabled(false);
     ui -> loadTableBtn -> setEnabled(false);
 
-    connect(&thread, &QThread::started, &a, &Automate::screenshot);
+    connect(&thread, &QThread::started, this, &MainWindow::buildTrack);
+    connect(this, &MainWindow::trackBuilded, &a, &Automate::screenshot);
 
-    connect(&a, SIGNAL(navigated()), &a, SLOT(screenshot()));
     connect(&a, SIGNAL(navigated()), this, SLOT(pixUpdate()));
     connect(&a, SIGNAL(screencreate()), this, SLOT(tableNavigate()));
     connect(&a, SIGNAL(navigated()), this, SLOT(filePath()));
@@ -358,8 +363,8 @@ void MainWindow::stop()
     ui -> loadTableBtn -> setEnabled(true);
     ui -> autoBtn -> setText("Автомат");
 
-    disconnect(&thread, &QThread::started, &a, &Automate::screenshot);
-    disconnect(&a, SIGNAL(navigated()), &a, SLOT(screenshot()));
+    disconnect(&thread, &QThread::started, this, &MainWindow::buildTrack);
+    disconnect(this, &MainWindow::trackBuilded, &a, &Automate::screenshot);
     disconnect(&a, SIGNAL(screencreate()), this, SLOT(tableNavigate()));
 
     disconnect(&a, SIGNAL(finished()), &thread, SLOT(terminate()));
@@ -402,32 +407,18 @@ $('#load-transport-history').click();)DELIM";
 void MainWindow::buildTrack()
 {
     QString jscodeShowTrack =
-R"($("#history_select_all_ts_chosen").mousedown();
-$('.chosen-results li:contains(10182)').mouseup();
-$("#history-load-navigation").click();
-
-var data = [];
-
-var TS = {
-    date: $("#history-date")[0].value,
-    uniqueID: $('#history-select-all-ts option:contains(10182)')[0].value
-}
-
-var response = fetch('https://webnavlo.nta.group/WNavSystemB/Map/GetHistoryNavigation', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json; charset=utf-8'
-    },
-    body: JSON.stringify(TS),
-}).then(async (response) => {
-    data = await response.json();
-    console.log(data);
-})
-
+R"(
 var simulate = new MouseEvent('click', {
     shiftKey: true,
     bubbles: true
 });
+
+var data = [];
+
+var TS = {
+                    date: $("#history-date")[0].value,
+                    uniqueID: $('#history-select-all-ts option:contains(garagenum )')[0].value
+                }
 
 function pointIndex (timeOfPoint) {
     for (var i = 0; i < data.length; i++)
@@ -440,68 +431,116 @@ function pointIndex (timeOfPoint) {
             break;
         }
     }
-})";
-
-    //jscodeBuildTrack.replace("garagenum", garage);
-    //jscodeBuildTrack.replace("StartTime", time);
-
-    //QTime startTime = QTime::fromString(time, "hh:mm");
-    //int hour = startTime.hour();
-    //int minute = startTime.minute();
-    //hour += 1;
-
-    //QTime endTime(hour, minute);
-    //QString endTimeStr = endTime.toString();
-    //jscodeBuildTrack.replace("EndTime", endTimeStr.sliced(0, 5));
-
-    /*QWebEngineScript showTrack;
-    showTrack.setInjectionPoint(QWebEngineScript::Deferred);
-    showTrack.setWorldId(QWebEngineScript::MainWorld);
-    showTrack.setName("show_track.js");
-    showTrack.setRunsOnSubFrames(true);
-    showTrack.setSourceCode(jscodeShowTrack);
-
-    ui -> widget -> page() -> scripts().insert(showTrack);*/
-    ui -> widget -> page() -> runJavaScript(jscodeShowTrack);
-
-    Sleep(2000);
-    emit garageSelected();
 }
 
-void MainWindow::buildRoute()
-{
-    ui -> widget -> page() -> runJavaScript("var start = pointIndex('17:00');"
-                                          "var end = pointIndex('18:00');"
+function f1() {
+    return new Promise(function(resolve) {
+        console.log(1);
+        $('#tabs-page-headers')[0].children[2].children[0].click()
+        //if(TS.uniqueID != $('#history-select-all-ts option:contains(10182)')[0].value)
+        //{
+        $("#history_select_all_ts_chosen").mousedown()
+        $('.chosen-results li:contains(garagenum )').mouseup()
+        $("#history-load-navigation").click()
+        //}
+        resolve();
+    })
+}
 
-                                          "$(`#history-navigation-table tbody [index = ${start}]`).click();"
-                                          "$(`#history-navigation-table tbody [index = ${end}]`)[0].dispatchEvent(simulate);");
+function f2() {
+    return new Promise(function(resolve) {
+            setTimeout(function() {
+            console.log(2);
+                var response = fetch('https://webnavlo.nta.group/WNavSystemB/Map/GetHistoryNavigation', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json; charset=utf-8'
+                    },
+                    body: JSON.stringify(TS),
+                }).then(async (response) => {
+                    data = await response.json();
+                    console.log(data)
+                })
+            resolve();
+            }, 250);
+    })
+}
 
-    QString jscodeShowRoute =
-R"DELIM($('#tabs-page-headers')[0].children[0].children[0].click();
-$('#tabs-page1 div:contains(370)')[0].click();
-$('#choose-transport-action-tracking-marsh')[0].click();
-$('#map')[0].children[3].children[5].style.display = "none";
-$('#map')[0].children[3].children[6].style.display = "block";)DELIM";
+function f4() {
+    return new Promise(function(resolve) {
+        setTimeout(function() {
+            console.log(4);
+            $('#tabs-page-headers')[0].children[0].children[0].click()
+            $('#tabs-page1 div:contains(RouteNum)')[0].click()
+            $('#choose-transport-action-tracking-marsh')[0].click()
+            $('#map')[0].children[3].children[5].style.display = "none"
+            $('#map')[0].children[3].children[6].style.display = "block"
+            resolve();
+        }, 200);
+    })
+}
 
-    QWebEngineScript showRoute;
-    showRoute.setInjectionPoint(QWebEngineScript::DocumentReady);
-    showRoute.setWorldId(QWebEngineScript::MainWorld);
-    showRoute.setName("show_route.js");
-    showRoute.setRunsOnSubFrames(true);
-    showRoute.setSourceCode(jscodeShowRoute);
+function f3() {
+    return new Promise(function(resolve) {
+            console.log(3);
+            var start = pointIndex("StartTime")
+            var end = pointIndex("EndTime")
+            $(`#history-navigation-table tbody [index = ${start}]`).click()
+            $(`#history-navigation-table tbody [index = ${end}]`)[0].dispatchEvent(simulate)
+            resolve();
+    })
+}
 
-    ui -> widget -> page() -> scripts().insert(showRoute);
+function f5() {
+    return new Promise(function(resolve){
+        setTimeout(function(){
+            console.log(5);
+            $('#tabs-page-headers')[0].children[2].children[0].click();
+            resolve();
+        }, 100);
+    })
+}
 
-    QWebEngineScript showCarNumber;
-    showCarNumber.setInjectionPoint(QWebEngineScript::DocumentReady);
-    showCarNumber.setWorldId(QWebEngineScript::MainWorld);
-    showCarNumber.setName("show_car_number.js");
-    showCarNumber.setRunsOnSubFrames(true);
-    showCarNumber.setSourceCode(
-R"DELIM($('#tabs-page-headers')[0].children[2].children[0].click()
-$('#tabs-page3')[0].scrollTo(0,0);)DELIM");
+function f6() {
+    return new Promise(function(resolve){
+        setTimeout(function(){
+            console.log(5);
+            $('#tabs-page3')[0].scrollTo(0,0);
+            resolve();
+        }, 1500);
+    })
+}
 
-    ui -> widget -> page() -> scripts().insert(showCarNumber);
+f1().then(function() {
+    return f2();
+});
+var inter = setInterval(function() {
+            if(data.length != 0){
+            clearInterval(inter);
+          f3().then(function() {
+              return f4();
+          }).then(function() {
+              return f5();
+          }).then(function() {
+              return f6();
+          });
+        }
+      }, 250);
+)";
 
-    disconnect(ui -> widget, &QWebEngineView::loadFinished, this, &MainWindow::buildRoute);
+    jscodeShowTrack.replace("garagenum", garage);
+    jscodeShowTrack.replace("StartTime", time);
+    jscodeShowTrack.replace("RouteNum", route);
+
+    QTime startTime = QTime::fromString(time, "hh:mm");
+    int hour = startTime.hour();
+    int minute = startTime.minute();
+    hour += 1;
+    QTime endTime(hour, minute);
+    QString endTimeStr = endTime.toString();
+    jscodeShowTrack.replace("EndTime", endTimeStr.sliced(0, 5));
+
+    ui -> widget -> page() -> runJavaScript(jscodeShowTrack);
+
+    emit trackBuilded();
 }

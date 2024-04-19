@@ -44,8 +44,6 @@ private slots:
     void enterName();
     void openStory();
     void buildTrack();
-    void buildRoute();
-   // void showTrack();
 
 private:
     QLineEdit *locationEdit;
@@ -75,8 +73,7 @@ private:
 
 signals:
     void tableLoaded();
-    void responsed();
-    void garageSelected();
+    void trackBuilded();
 
 };
 #endif // MAINWINDOW_H
