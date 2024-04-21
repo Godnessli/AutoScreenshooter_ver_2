@@ -25,10 +25,12 @@ public:
     QPixmap pixmap;
 
 signals:
+    void pixUpdated();
     void runningChanged();
     void screencreate();
     void navigated();
     void finished();
+    void filePathCreated();
     void wait();
 
 public slots:

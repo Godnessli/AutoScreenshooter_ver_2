@@ -144,6 +144,7 @@ void MainWindow::pixUpdate()
 
     pixmap = pix;
     a.pixmap = pix;
+
 }
 
 void MainWindow::filePath()
@@ -231,6 +232,8 @@ void MainWindow::filePath()
 
     initialPath += slash + name;
     a.initialPath = initialPath;
+
+    emit a.filePathCreated();
 }
 
 void MainWindow::web()
@@ -258,8 +261,6 @@ $('#Key').val('piteravto5');
 $('#signIn').click();)DELIM"));
 
     ui -> widget -> page() -> scripts().insert(logIn);
-
-    connect(ui -> widget, &QWebEngineView::loadFinished, this, &MainWindow::enterName);
 }
 
 void MainWindow::tableNavigate()
@@ -280,6 +281,7 @@ void MainWindow::tableNavigate()
     time = ui -> tableWidget_Item -> item(numRow, 3) -> text();
     garage = ui -> tableWidget_Item -> item(numRow, 5) -> text();
     route = ui -> tableWidget_Item -> item(numRow, 1) -> text();
+    nextGarage = ui -> tableWidget_Item -> item(numRow + 1, 5) -> text();
 
     m_delegate -> setRows(rws);
     ui -> tableWidget_Item -> update();
@@ -311,6 +313,8 @@ void MainWindow::tableNavigate()
             }
         }
     }
+
+    qDebug() << "Hello from JS!!!";
     emit a.navigated();
 }
 
@@ -340,11 +344,12 @@ void MainWindow::start()
     ui -> loadTableBtn -> setEnabled(false);
 
     connect(&thread, &QThread::started, this, &MainWindow::buildTrack);
-    connect(this, &MainWindow::trackBuilded, &a, &Automate::screenshot);
 
+    connect(&a, SIGNAL(navigated()), &a, SLOT(screenshot()));
     connect(&a, SIGNAL(navigated()), this, SLOT(pixUpdate()));
-    connect(&a, SIGNAL(screencreate()), this, SLOT(tableNavigate()));
     connect(&a, SIGNAL(navigated()), this, SLOT(filePath()));
+    connect(&a, SIGNAL(screencreate()), this, SLOT(buildTrack()));
+
     connect(&a, SIGNAL(finished()), &thread, SLOT(terminate()));
     connect(&a, SIGNAL(finished()), this, SLOT(stop()));
     connect(&a, SIGNAL(wait()), &thread, SLOT(quit()));
@@ -372,31 +377,33 @@ void MainWindow::stop()
     disconnect(&a, SIGNAL(wait()), &thread, SLOT(quit()));
 }
 
-void MainWindow::enterName()
-{
-    /*QWebEngineScript logIn;
-    logIn.setInjectionPoint(QWebEngineScript::DocumentReady);
-    logIn.setWorldId(QWebEngineScript::MainWorld);
-    logIn.setName("user_login.js");
-    logIn.setRunsOnSubFrames(true);
-    logIn.setSourceCode(QStringLiteral(
-R"DELIM($("#Login").val("KuznecovAV");
-$('#Password').val('1234');
-$('#Key').val('piteravto5');
-$('#signIn').click();)DELIM"));
-
-    ui -> widget -> page() -> scripts().insert(logIn);*/
-
-    disconnect(ui -> widget, &QWebEngineView::loadFinished, this, &MainWindow::enterName);
-}
-
 void MainWindow::openStory()
 {
+    QFile wcjs(":/qtwebchannel/qwebchannel.js");
+    if(!wcjs.open(QIODevice::ReadOnly))
+        qDebug() << "Couldn't load Qt's QWebChannel API!";
+    QString qWebChannelJs = QString::fromLatin1(wcjs.readAll());
+    wcjs.close();
+
+    ui -> widget -> page() -> runJavaScript(qWebChannelJs);
+
+    QWebChannel channel;
+    channel.registerObject("Js", &js);
+    ui -> widget -> page() -> setWebChannel(&channel);
+
     QString jscodeSetDate =
 R"DELIM($('#tabs-page-headers')[0].children[2].children[0].click();
 $('#history-date').val('datefix');
 $('#history-tab-all').click();
-$('#load-transport-history').click();)DELIM";
+$('#load-transport-history').click();
+
+var cpp;
+
+new QWebChannel(qt.webChannelTransport,
+    function( channel) {
+    cpp = channel.objects.Js;
+});
+)DELIM";
 
     QString datefix = date.sliced(6) + "-" + date.sliced(3, 2) + "-" + date.sliced(0, 2);
     jscodeSetDate.replace("datefix", datefix);
@@ -408,88 +415,79 @@ void MainWindow::buildTrack()
 {
     QString jscodeShowTrack =
 R"(
-var simulate = new MouseEvent('click', {
-    shiftKey: true,
-    bubbles: true
-});
+if(!alreadyCreated);
+{
+    var simulate = new MouseEvent('click', {
+        shiftKey: true,
+        bubbles: true
+    });
 
-var data = [];
+    var data = [];
 
-var TS = {
-                    date: $("#history-date")[0].value,
-                    uniqueID: $('#history-select-all-ts option:contains(garagenum )')[0].value
-                }
+    var TS = {
+                        date: $("#history-date")[0].value,
+                        uniqueID: $('#history-select-all-ts option:contains(garagenum )')[0].value
+                    }
 
-function pointIndex (timeOfPoint) {
-    for (var i = 0; i < data.length; i++)
-    {
-        var point = data[i].timeNav.split('');
-        var time = point.slice(11, 16);
-        var strtime = time.toString();
-        if(strtime.replaceAll(',', '') === timeOfPoint) {
-            return i;
-            break;
+    function pointIndex (timeOfPoint) {
+        for (var i = 0; i < data.length; i++)
+        {
+            var point = data[i].timeNav.split('');
+            var time = point.slice(11, 16);
+            var strtime = time.toString();
+            if(strtime.replaceAll(',', '') === timeOfPoint) {
+                return i;
+                break;
+            }
         }
     }
-}
 
-function f1() {
-    return new Promise(function(resolve) {
-        console.log(1);
-        $('#tabs-page-headers')[0].children[2].children[0].click()
-        //if(TS.uniqueID != $('#history-select-all-ts option:contains(10182)')[0].value)
-        //{
-        $("#history_select_all_ts_chosen").mousedown()
-        $('.chosen-results li:contains(garagenum )').mouseup()
-        $("#history-load-navigation").click()
-        //}
-        resolve();
-    })
-}
+    function f1() {
+        return new Promise(function(resolve) {
+            console.log(1);
+            $('#tabs-page-headers')[0].children[2].children[0].click()
+            //if(TS.uniqueID != $('#history-select-all-ts option:contains(10182)')[0].value)
+            //{
+            $("#history_select_all_ts_chosen").mousedown()
+            $('.chosen-results li:contains(garagenum )').mouseup()
+            $("#history-load-navigation").click()
+            //}
+            resolve();
+        })
+    }
 
-function f2() {
-    return new Promise(function(resolve) {
+    function f2() {
+        return new Promise(function(resolve) {
+                setTimeout(function() {
+                console.log(2);
+                    var response = fetch('https://webnavlo.nta.group/WNavSystemB/Map/GetHistoryNavigation', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json; charset=utf-8'
+                        },
+                        body: JSON.stringify(TS),
+                    }).then(async (response) => {
+                        data = await response.json();
+                        console.log(data)
+                    })
+                resolve();
+                }, 250);
+        })
+    }
+
+    function f4() {
+        return new Promise(function(resolve) {
             setTimeout(function() {
-            console.log(2);
-                var response = fetch('https://webnavlo.nta.group/WNavSystemB/Map/GetHistoryNavigation', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json; charset=utf-8'
-                    },
-                    body: JSON.stringify(TS),
-                }).then(async (response) => {
-                    data = await response.json();
-                    console.log(data)
-                })
-            resolve();
-            }, 250);
-    })
-}
-
-function f4() {
-    return new Promise(function(resolve) {
-        setTimeout(function() {
-            console.log(4);
-            $('#tabs-page-headers')[0].children[0].children[0].click()
-            $('#tabs-page1 div:contains(RouteNum)')[0].click()
-            $('#choose-transport-action-tracking-marsh')[0].click()
-            $('#map')[0].children[3].children[5].style.display = "none"
-            $('#map')[0].children[3].children[6].style.display = "block"
-            resolve();
-        }, 200);
-    })
-}
-
-function f3() {
-    return new Promise(function(resolve) {
-            console.log(3);
-            var start = pointIndex("StartTime")
-            var end = pointIndex("EndTime")
-            $(`#history-navigation-table tbody [index = ${start}]`).click()
-            $(`#history-navigation-table tbody [index = ${end}]`)[0].dispatchEvent(simulate)
-            resolve();
-    })
-}
+                console.log(4);
+                $('#tabs-page-headers')[0].children[0].children[0].click()
+                $('#tabs-page1 div:contains(RouteNum)')[0].click()
+                $('#choose-transport-action-tracking-marsh')[0].click()
+                $('#map')[0].children[3].children[5].style.display = "none"
+                $('#map')[0].children[3].children[6].style.display = "block"
+                resolve();
+            }, 200);
+        })
+    }
 
 function f5() {
     return new Promise(function(resolve){
@@ -504,11 +502,31 @@ function f5() {
 function f6() {
     return new Promise(function(resolve){
         setTimeout(function(){
-            console.log(5);
+            console.log(6);
             $('#tabs-page3')[0].scrollTo(0,0);
             resolve();
-        }, 1500);
+        }, 2500);
     })
+}
+}
+
+function f3() {
+    return new Promise(function(resolve) {
+            console.log(3);
+            var start = pointIndex("StartTime")
+            var end = pointIndex("EndTime")
+            $(`#history-navigation-table tbody [index = ${start}]`).click()
+            $(`#history-navigation-table tbody [index = ${end}]`)[0].dispatchEvent(simulate)
+            resolve();
+    })
+}
+
+var alreadyCreated = true;
+var completed = true;
+
+if(TS.uniqueID != $('#history-select-all-ts option:contains(NextGarageNum )')[0].value)
+{
+    alreadyCreated = false;
 }
 
 f1().then(function() {
@@ -523,6 +541,8 @@ var inter = setInterval(function() {
               return f5();
           }).then(function() {
               return f6();
+          }).then(function() {
+              return cpp.tableNavigate();
           });
         }
       }, 250);
@@ -531,6 +551,7 @@ var inter = setInterval(function() {
     jscodeShowTrack.replace("garagenum", garage);
     jscodeShowTrack.replace("StartTime", time);
     jscodeShowTrack.replace("RouteNum", route);
+    jscodeShowTrack.replace("NextGarageNum", nextGarage);
 
     QTime startTime = QTime::fromString(time, "hh:mm");
     int hour = startTime.hour();
@@ -540,7 +561,8 @@ var inter = setInterval(function() {
     QString endTimeStr = endTime.toString();
     jscodeShowTrack.replace("EndTime", endTimeStr.sliced(0, 5));
 
-    ui -> widget -> page() -> runJavaScript(jscodeShowTrack);
+    bool functionComlete;
+    ui -> widget -> page() -> runJavaScript(jscodeShowTrack, [](const QVariant &b) { qDebug() << b.toMap().values(); });
 
     emit trackBuilded();
 }

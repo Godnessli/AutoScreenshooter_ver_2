@@ -4,6 +4,7 @@
 #include "classes/delegate.h"
 #include "classes/requestinterceptor.h"
 #include "classes/automate.h"
+#include "classes/jsfunction.h"
 #include <QMainWindow>
 #include <QPushButton>
 #include <QtWebEngineCore>
@@ -31,17 +32,16 @@ public:
 
 public slots:
     void screenshot();
+    Q_INVOKABLE void tableNavigate();
 
 private slots:
     void pixUpdate();
     void filePath();
     void buildTable();
     void web();
-    void tableNavigate();
     void on_autoBtn_clicked();
     void start();
     void stop();
-    void enterName();
     void openStory();
     void buildTrack();
 
@@ -55,6 +55,7 @@ private:
     QString date,
             route,
             garage,
+            nextGarage,
             problem,
             time,
             name,
@@ -69,6 +70,7 @@ private:
     bool isBuild = false;
     Ui::MainWindow *ui;
     QThread thread;
+    jsFunction js;
     Automate a;
 
 signals:
