@@ -29,8 +29,6 @@ public:
     Delegate *m_delegate = new Delegate;
     RequestInterceptor *ri = new RequestInterceptor();
 
-    Q_INVOKABLE void tableNavigate(const QString &str);
-
 public slots:
     void screenshot();
 
@@ -43,7 +41,9 @@ private slots:
     void start();
     void stop();
     void openStory();
+    void tableNavigate();
     void buildTrack();
+    void getBoolean();
 
 private:
     QLineEdit *locationEdit;
@@ -68,6 +68,8 @@ private:
                   slash = "/";
 
     bool isBuild = false;
+    bool functionComplete;
+    QTimer *timer = new QTimer;
     Ui::MainWindow *ui;
     QThread thread;
     Automate a;

@@ -30,6 +30,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(screen, &QPushButton::clicked, this, &MainWindow::screenshot);
     connect(buildTrack, &QPushButton::clicked, this, &MainWindow::buildTrack);
     connect(this, &MainWindow::tableLoaded, this, &MainWindow::openStory);
+    connect(timer, &QTimer::timeout, this, &MainWindow::getBoolean);
 
     a.setRunning(false);
 
@@ -131,7 +132,7 @@ void MainWindow::screenshot()
     if(isBuild)
     {
         pixmap.save(initialPath);
-        tableNavigate("hello from js");
+        tableNavigate();
     }
     else
         pixmap.save("Без имени.jpg");
@@ -145,6 +146,7 @@ void MainWindow::pixUpdate()
     pixmap = pix;
     a.pixmap = pix;
 
+    emit a.pixUpdated();
 }
 
 void MainWindow::filePath()
@@ -258,15 +260,15 @@ void MainWindow::web()
         R"DELIM($("#Login").val("KuznecovAV");
 $('#Password').val('1234');
 $('#Key').val('piteravto5');
-$('#signIn').click();)DELIM"));
+$('#signIn').click();
+
+var completed = false;)DELIM"));
 
     ui -> widget -> page() -> scripts().insert(logIn);
 }
 
-void MainWindow::tableNavigate(const QString &str)
+void MainWindow::tableNavigate()
 {
-    qDebug() << str;
-
     if (a.wasRun)
         numRow = a.numRow;
     else
@@ -315,9 +317,6 @@ void MainWindow::tableNavigate(const QString &str)
             }
         }
     }
-
-    qDebug() << "Hello from JS!!! " << str;
-    emit a.navigated();
 }
 
 void MainWindow::on_autoBtn_clicked()
@@ -347,9 +346,10 @@ void MainWindow::start()
 
     connect(&thread, &QThread::started, this, &MainWindow::buildTrack);
 
-    connect(&a, SIGNAL(navigated()), &a, SLOT(screenshot()));
-    connect(&a, SIGNAL(navigated()), this, SLOT(pixUpdate()));
-    connect(&a, SIGNAL(navigated()), this, SLOT(filePath()));
+    connect(this, SIGNAL(trackBuilded()), this, SLOT(filePath()));
+    connect(&a, SIGNAL(filePathCreated()), this, SLOT(pixUpdate()));
+    connect(&a, SIGNAL(filePathCreated()), this, SLOT(tableNavigate()));
+    connect(&a, SIGNAL(pixUpdated()), &a, SLOT(screenshot()));
     connect(&a, SIGNAL(screencreate()), this, SLOT(buildTrack()));
 
     connect(&a, SIGNAL(finished()), &thread, SLOT(terminate()));
@@ -398,14 +398,6 @@ R"DELIM($('#tabs-page-headers')[0].children[2].children[0].click();
 $('#history-date').val('datefix');
 $('#history-tab-all').click();
 $('#load-transport-history').click();
-
-var cpp;
-
-new QWebChannel(qt.webChannelTransport,
-    function( channel) {
-    cpp = channel.objects.Js;
-    cpp.tableNavigate("Hello from JavaScript!");
-});
 )DELIM";
 
     QString datefix = date.sliced(6) + "-" + date.sliced(3, 2) + "-" + date.sliced(0, 2);
@@ -420,12 +412,14 @@ void MainWindow::buildTrack()
 R"(
 if(!alreadyCreated);
 {
+    $("#menu")[0].value = false;
     var simulate = new MouseEvent('click', {
         shiftKey: true,
         bubbles: true
     });
 
     var data = [];
+    $("#menu")[0].value = false;
 
     var TS = {
                         date: $("#history-date")[0].value,
@@ -525,7 +519,6 @@ function f3() {
 }
 
 var alreadyCreated = true;
-var completed = true;
 
 if(TS.uniqueID != $('#history-select-all-ts option:contains(NextGarageNum )')[0].value)
 {
@@ -533,7 +526,7 @@ if(TS.uniqueID != $('#history-select-all-ts option:contains(NextGarageNum )')[0]
 }
 
 f1().then(function() {
-    return f2();
+    f2();
 });
 var inter = setInterval(function() {
             if(data.length != 0){
@@ -545,10 +538,10 @@ var inter = setInterval(function() {
           }).then(function() {
               return f6();
           }).then(function() {
-              return cpp.tableNavigate("Hello from JavaScript!");
+              $("#menu")[0].value = true;
           });
-        }
-      }, 250);
+    }
+}, 250);
 )";
 
     jscodeShowTrack.replace("garagenum", garage);
@@ -564,8 +557,24 @@ var inter = setInterval(function() {
     QString endTimeStr = endTime.toString();
     jscodeShowTrack.replace("EndTime", endTimeStr.sliced(0, 5));
 
-    bool functionComlete;
-    ui -> widget -> page() -> runJavaScript(jscodeShowTrack, [](const QVariant &b) { qDebug() << b.toMap().values(); });
+    ui -> widget -> page() -> runJavaScript(jscodeShowTrack);
 
-    emit trackBuilded();
+    functionComplete = false;
+
+    timer -> start(1000);
+}
+
+void MainWindow::getBoolean()
+{
+    ui -> widget -> page() -> runJavaScript("$('#menu')[0].value",
+                                      [this](const QVariant &b)
+                                      {functionComplete = b.toBool();});
+
+    if(functionComplete)
+    {
+        qDebug() << functionComplete;
+
+        timer -> stop();
+        emit trackBuilded();
+    }
 }

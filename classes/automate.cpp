@@ -31,6 +31,7 @@ void Automate::screenshot()
 
         pixmap.save(initialPath);
         ++numRow;
+
         emit screencreate();
     }
 }
