@@ -131,7 +131,7 @@ void MainWindow::screenshot()
     if(isBuild)
     {
         pixmap.save(initialPath);
-        tableNavigate();
+        tableNavigate("hello from js");
     }
     else
         pixmap.save("Без имени.jpg");
@@ -263,8 +263,10 @@ $('#signIn').click();)DELIM"));
     ui -> widget -> page() -> scripts().insert(logIn);
 }
 
-void MainWindow::tableNavigate()
+void MainWindow::tableNavigate(const QString &str)
 {
+    qDebug() << str;
+
     if (a.wasRun)
         numRow = a.numRow;
     else
@@ -314,7 +316,7 @@ void MainWindow::tableNavigate()
         }
     }
 
-    qDebug() << "Hello from JS!!!";
+    qDebug() << "Hello from JS!!! " << str;
     emit a.navigated();
 }
 
@@ -388,7 +390,7 @@ void MainWindow::openStory()
     ui -> widget -> page() -> runJavaScript(qWebChannelJs);
 
     QWebChannel channel;
-    channel.registerObject("Js", &js);
+    channel.registerObject("Js", this);
     ui -> widget -> page() -> setWebChannel(&channel);
 
     QString jscodeSetDate =
@@ -402,6 +404,7 @@ var cpp;
 new QWebChannel(qt.webChannelTransport,
     function( channel) {
     cpp = channel.objects.Js;
+    cpp.tableNavigate("Hello from JavaScript!");
 });
 )DELIM";
 
@@ -542,7 +545,7 @@ var inter = setInterval(function() {
           }).then(function() {
               return f6();
           }).then(function() {
-              return cpp.tableNavigate();
+              return cpp.tableNavigate("Hello from JavaScript!");
           });
         }
       }, 250);

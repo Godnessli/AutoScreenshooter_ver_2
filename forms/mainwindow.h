@@ -4,7 +4,6 @@
 #include "classes/delegate.h"
 #include "classes/requestinterceptor.h"
 #include "classes/automate.h"
-#include "classes/jsfunction.h"
 #include <QMainWindow>
 #include <QPushButton>
 #include <QtWebEngineCore>
@@ -30,9 +29,10 @@ public:
     Delegate *m_delegate = new Delegate;
     RequestInterceptor *ri = new RequestInterceptor();
 
+    Q_INVOKABLE void tableNavigate(const QString &str);
+
 public slots:
     void screenshot();
-    Q_INVOKABLE void tableNavigate();
 
 private slots:
     void pixUpdate();
@@ -70,7 +70,6 @@ private:
     bool isBuild = false;
     Ui::MainWindow *ui;
     QThread thread;
-    jsFunction js;
     Automate a;
 
 signals:

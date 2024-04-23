@@ -21,7 +21,6 @@ SOURCES += \
 HEADERS += \
     classes/automate.h \
     classes/delegate.h \
-    classes/jsfunction.h \
     classes/requestinterceptor.h \
     classes/table.h \
     forms/mainwindow.h
