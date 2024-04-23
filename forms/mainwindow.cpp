@@ -286,6 +286,7 @@ void MainWindow::tableNavigate()
     garage = ui -> tableWidget_Item -> item(numRow, 5) -> text();
     route = ui -> tableWidget_Item -> item(numRow, 1) -> text();
     nextGarage = ui -> tableWidget_Item -> item(numRow + 1, 5) -> text();
+    timeStep = ui -> tableWidget_Item -> item(numRow, 4) -> text();
 
     m_delegate -> setRows(rws);
     ui -> tableWidget_Item -> update();
@@ -364,15 +365,13 @@ void MainWindow::stop()
 {
     a.setRunning(false);
 
-    ui -> buildTrack -> setEnabled(true);
-    ui -> openTable -> setEnabled(true);
-    ui -> screenBtn -> setEnabled(true);
-    ui -> loadTableBtn -> setEnabled(true);
-    ui -> autoBtn -> setText("Автомат");
-
     disconnect(&thread, &QThread::started, this, &MainWindow::buildTrack);
-    disconnect(this, &MainWindow::trackBuilded, &a, &Automate::screenshot);
-    disconnect(&a, SIGNAL(screencreate()), this, SLOT(tableNavigate()));
+
+    disconnect(this, SIGNAL(trackBuilded()), this, SLOT(filePath()));
+    disconnect(&a, SIGNAL(filePathCreated()), this, SLOT(pixUpdate()));
+    disconnect(&a, SIGNAL(filePathCreated()), this, SLOT(tableNavigate()));
+    disconnect(&a, SIGNAL(pixUpdated()), &a, SLOT(screenshot()));
+    disconnect(&a, SIGNAL(screencreate()), this, SLOT(buildTrack()));
 
     disconnect(&a, SIGNAL(finished()), &thread, SLOT(terminate()));
     disconnect(&a, SIGNAL(finished()), this, SLOT(stop()));
@@ -552,7 +551,18 @@ var inter = setInterval(function() {
     QTime startTime = QTime::fromString(time, "hh:mm");
     int hour = startTime.hour();
     int minute = startTime.minute();
-    hour += 1;
+
+    if(timeStep != "")
+    {
+        QTime finishTime = QTime::fromString(timeStep, "hh:mm");
+        int finishHour = finishTime.hour();
+        int finishMinute = finishTime.minute();
+        hour += finishHour;
+        minute += finishMinute;
+    }
+    else
+        hour += 1;
+
     QTime endTime(hour, minute);
     QString endTimeStr = endTime.toString();
     jscodeShowTrack.replace("EndTime", endTimeStr.sliced(0, 5));

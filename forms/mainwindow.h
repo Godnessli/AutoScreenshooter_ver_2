@@ -58,6 +58,7 @@ private:
             nextGarage,
             problem,
             time,
+            timeStep,
             name,
             initialPath;
 
