@@ -53,6 +53,7 @@ private:
     QString loginScript;
 
     QString date,
+            previousDate,
             route,
             garage,
             nextGarage,

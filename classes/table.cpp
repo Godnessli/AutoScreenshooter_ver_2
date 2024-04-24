@@ -30,7 +30,9 @@ QVector<QVector<QString>> Table::readtable()
     qDebug() << "Table thread is " << QThread::currentThreadId();
     getpath();
     QVector<QVector<QString>> tab;
-    QString check1 = "ОБРЫВ БЛОКА ГЛОНАСС", check2 = "ПРОБКИ", check3 = "РЕЙС ВЫПОЛНЕН ПРАВИЛЬНО";
+    QString check1 = "ОБРЫВ БЛОКА ГЛОНАСС",
+            check2 = "ПРОБКИ",
+            check3 = "РЕЙС ВЫПОЛНЕН ПРАВИЛЬНО";
     if (check(filepath))
     {
         workbook wb;
@@ -44,9 +46,56 @@ QVector<QVector<QString>> Table::readtable()
                 int num = cell.column_index();
                 if(num != 7 && num != 10)
                 {
-                    std::string c = cell.to_string();
-                    QString cll;
-                    ROW.push_back(cll.fromStdString(c));
+                    if(num != 4 && num != 5 && num != 1)
+                    {
+                        std::string c = cell.to_string();
+                        ROW.push_back(QString::fromStdString(c));
+                    }
+                    else if(num == 1)
+                    {
+                        std::string date_str = cell.to_string();
+                        int day_count;
+
+                        if(cell.is_date())
+                        {
+                            try
+                            {
+                                day_count = stod(date_str);
+                                QDate date;
+                                date.setDate(1900, 1, 1);
+                                date = date.addDays(day_count);
+                                ROW.push_back(date.toString("dd.MM.yyyy"));
+                            }
+                            catch(std::invalid_argument)
+                            {
+                                ROW.push_back(QString::fromStdString(date_str));
+                            }
+                        }
+                        else
+                            ROW.push_back(QString::fromStdString(date_str));
+                    }
+                    else
+                    {
+                        const int msecperDay = 86400000;
+                        double day_count;
+                        std::string time_str = cell.to_string();
+                        if(cell.is_date())
+                        {
+                            try
+                            {
+                                day_count = stod(time_str);
+                                day_count *= msecperDay;
+                                QTime time = QTime::fromMSecsSinceStartOfDay(day_count);
+                                ROW.push_back(time.toString("hh:mm"));
+                            }
+                            catch(std::invalid_argument)
+                            {
+                                ROW.push_back(QString::fromStdString(time_str));
+                            }
+                        }
+                        else
+                            ROW.push_back(QString::fromStdString(time_str));
+                    }
                 }
             }
 

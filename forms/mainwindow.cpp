@@ -282,6 +282,7 @@ void MainWindow::tableNavigate()
     ++numRow;
 
     date = ui -> tableWidget_Item -> item(numRow, 0) -> text();
+    previousDate = ui -> tableWidget_Item -> item(numRow - 1, 0) -> text();
     time = ui -> tableWidget_Item -> item(numRow, 3) -> text();
     garage = ui -> tableWidget_Item -> item(numRow, 5) -> text();
     route = ui -> tableWidget_Item -> item(numRow, 1) -> text();
@@ -409,163 +410,182 @@ void MainWindow::buildTrack()
 {
     QString jscodeShowTrack =
 R"(
-if(!alreadyCreated);
-{
-    $("#menu")[0].value = false;
-    var simulate = new MouseEvent('click', {
-        shiftKey: true,
-        bubbles: true
-    });
-
-    var data = [];
-    $("#menu")[0].value = false;
-
-    var TS = {
-                        date: $("#history-date")[0].value,
-                        uniqueID: $('#history-select-all-ts option:contains(garagenum )')[0].value
-                    }
-
-    function pointIndex (timeOfPoint) {
-        for (var i = 0; i < data.length; i++)
-        {
-            var point = data[i].timeNav.split('');
-            var time = point.slice(11, 16);
-            var strtime = time.toString();
-            if(strtime.replaceAll(',', '') === timeOfPoint) {
-                return i;
-                break;
-            }
-        }
-    }
-
-    function f1() {
-        return new Promise(function(resolve) {
-            console.log(1);
-            $('#tabs-page-headers')[0].children[2].children[0].click()
-            //if(TS.uniqueID != $('#history-select-all-ts option:contains(10182)')[0].value)
-            //{
-            $("#history_select_all_ts_chosen").mousedown()
-            $('.chosen-results li:contains(garagenum )').mouseup()
-            $("#history-load-navigation").click()
-            //}
-            resolve();
-        })
-    }
-
-    function f2() {
-        return new Promise(function(resolve) {
-                setTimeout(function() {
-                console.log(2);
-                    var response = fetch('https://webnavlo.nta.group/WNavSystemB/Map/GetHistoryNavigation', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json; charset=utf-8'
-                        },
-                        body: JSON.stringify(TS),
-                    }).then(async (response) => {
-                        data = await response.json();
-                        console.log(data)
-                    })
-                resolve();
-                }, 250);
-        })
-    }
-
-    function f4() {
-        return new Promise(function(resolve) {
-            setTimeout(function() {
-                console.log(4);
-                $('#tabs-page-headers')[0].children[0].children[0].click()
-                $('#tabs-page1 div:contains(RouteNum)')[0].click()
-                $('#choose-transport-action-tracking-marsh')[0].click()
-                $('#map')[0].children[3].children[5].style.display = "none"
-                $('#map')[0].children[3].children[6].style.display = "block"
-                resolve();
-            }, 200);
-        })
-    }
-
-function f5() {
-    return new Promise(function(resolve){
-        setTimeout(function(){
-            console.log(5);
-            $('#tabs-page-headers')[0].children[2].children[0].click();
-            resolve();
-        }, 100);
-    })
-}
-
-function f6() {
-    return new Promise(function(resolve){
-        setTimeout(function(){
-            console.log(6);
-            $('#tabs-page3')[0].scrollTo(0,0);
-            resolve();
-        }, 2500);
-    })
-}
-}
-
-function f3() {
+function setDate() {
     return new Promise(function(resolve) {
-            console.log(3);
-            var start = pointIndex("StartTime")
-            var end = pointIndex("EndTime")
-            $(`#history-navigation-table tbody [index = ${start}]`).click()
-            $(`#history-navigation-table tbody [index = ${end}]`)[0].dispatchEvent(simulate)
-            resolve();
+        if("THISDATE" != "PREVDATE")
+        {
+            $('#tabs-page-headers')[0].children[2].children[0].click();
+            $('#history-date').val('THISDATE');
+            $('#history-tab-all').click();
+            $('#load-transport-history').click();
+        }
+        resolve();
     })
 }
 
-var alreadyCreated = true;
+function build() {
+    return new Promise(function(resolve) {
+        setTimeout(function() {
+            if(!alreadyCreated);
+            {
+                $("#menu")[0].value = false;
+                var simulate = new MouseEvent('click', {
+                    shiftKey: true,
+                    bubbles: true
+                });
 
-if(TS.uniqueID != $('#history-select-all-ts option:contains(NextGarageNum )')[0].value)
-{
-    alreadyCreated = false;
+                var data = [];
+                $("#menu")[0].value = false;
+
+                var TS = {
+                                    date: $("#history-date")[0].value,
+                                    uniqueID: $('#history-select-all-ts option:contains(garagenum )')[0].value
+                                }
+
+                function pointIndex (timeOfPoint) {
+                    for (var i = 0; i < data.length; i++)
+                    {
+                        var point = data[i].timeNav.split('');
+                        var time = point.slice(11, 16);
+                        var strtime = time.toString();
+                        if(strtime.replaceAll(',', '') === timeOfPoint) {
+                            return i;
+                            break;
+                        }
+                    }
+                }
+
+                function f1() {
+                    return new Promise(function(resolve) {
+                        console.log(1);
+                        $('#tabs-page-headers')[0].children[2].children[0].click()
+                        $("#history_select_all_ts_chosen").mousedown()
+                        $('.chosen-results li:contains(garagenum )').mouseup()
+                        $("#history-load-navigation").click()
+                        resolve();
+                    })
+                }
+
+                function f2() {
+                    return new Promise(function(resolve) {
+                            setTimeout(function() {
+                            console.log(2);
+                                var response = fetch('https://webnavlo.nta.group/WNavSystemB/Map/GetHistoryNavigation', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json; charset=utf-8'
+                                    },
+                                    body: JSON.stringify(TS),
+                                }).then(async (response) => {
+                                      data = await response.json();
+                                    console.log(data)
+                                })
+                            resolve();
+                            }, 250);
+                    })
+                }
+
+                function f4() {
+                    return new Promise(function(resolve) {
+                        setTimeout(function() {
+                            console.log(4);
+                            $('#tabs-page-headers')[0].children[0].children[0].click()
+                            $('#tabs-page1 div:contains(RouteNum)')[0].click()
+                            $('#choose-transport-action-tracking-marsh')[0].click()
+                            $('#map')[0].children[3].children[5].style.display = "none"
+                            $('#map')[0].children[3].children[6].style.display = "block"
+                            resolve();
+                        }, 200);
+                    })
+                }
+
+            function f5() {
+                return new Promise(function(resolve){
+                    setTimeout(function(){
+                        console.log(5);
+                        $('#tabs-page-headers')[0].children[2].children[0].click();
+                        resolve();
+                    }, 1000);
+                })
+            }
+
+            function f6() {
+                return new Promise(function(resolve){
+                    setTimeout(function(){
+                        console.log(6);
+                        $('#tabs-page3')[0].scrollTo(0,0);
+                        resolve();
+                    }, 100);
+                })
+            }
+            }
+
+            function f3() {
+                return new Promise(function(resolve) {
+                        console.log(3);
+                        var start = pointIndex("StartTime")
+                        var end = pointIndex("EndTime")
+                        $(`#history-navigation-table tbody [index = ${start}]`).click()
+                        $(`#history-navigation-table tbody [index = ${end}]`)[0].dispatchEvent(simulate)
+                        resolve();
+                })
+            }
+
+            var alreadyCreated = true;
+
+            if(TS.uniqueID != $('#history-select-all-ts option:contains(NextGarageNum )')[0].value)
+            {
+                alreadyCreated = false;
+            }
+
+            f1().then(function() {
+                return f2();
+            });
+            var inter = setInterval(function() {
+                        if(data.length != 0){
+                        clearInterval(inter);
+                      f3().then(function() {
+                          return f4();
+                      }).then(function() {
+                          return f5();
+                      }).then(function() {
+                          return f6();
+                      }).then(function() {
+                          $("#menu")[0].value = true;
+                      });
+                }
+            }, 250);
+            resolve();
+        }, 500);
+    })
 }
 
-f1().then(function() {
-    f2();
+setDate().then(function() {
+    return build();
 });
-var inter = setInterval(function() {
-            if(data.length != 0){
-            clearInterval(inter);
-          f3().then(function() {
-              return f4();
-          }).then(function() {
-              return f5();
-          }).then(function() {
-              return f6();
-          }).then(function() {
-              $("#menu")[0].value = true;
-          });
-    }
-}, 250);
 )";
 
+    QString thisDate = date.sliced(6) + "-" + date.sliced(3, 2) + "-" + date.sliced(0, 2);
+    QString prevDate = previousDate.sliced(6) + "-" + previousDate.sliced(3, 2) + "-" + previousDate.sliced(0, 2);
+
+    jscodeShowTrack.replace("THISDATE", thisDate);
+    jscodeShowTrack.replace("PREVDATE", prevDate);
     jscodeShowTrack.replace("garagenum", garage);
     jscodeShowTrack.replace("StartTime", time);
     jscodeShowTrack.replace("RouteNum", route);
     jscodeShowTrack.replace("NextGarageNum", nextGarage);
 
     QTime startTime = QTime::fromString(time, "hh:mm");
-    int hour = startTime.hour();
-    int minute = startTime.minute();
-
+    QTime endTime;
     if(timeStep != "")
     {
-        QTime finishTime = QTime::fromString(timeStep, "hh:mm");
-        int finishHour = finishTime.hour();
-        int finishMinute = finishTime.minute();
-        hour += finishHour;
-        minute += finishMinute;
+        QTime betweenPointsTime = QTime::fromString(timeStep, "hh:mm");
+        startTime = startTime.addMSecs(betweenPointsTime.msecsSinceStartOfDay());
     }
     else
-        hour += 1;
+        endTime = startTime.addSecs(3600);
 
-    QTime endTime(hour, minute);
-    QString endTimeStr = endTime.toString();
-    jscodeShowTrack.replace("EndTime", endTimeStr.sliced(0, 5));
+    jscodeShowTrack.replace("EndTime", QString(endTime.toString("hh:mm")));
 
     ui -> widget -> page() -> runJavaScript(jscodeShowTrack);
 
