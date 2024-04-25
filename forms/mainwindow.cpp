@@ -398,187 +398,170 @@ void MainWindow::buildTrack()
 {
     QString jscodeShowTrack =
 R"(
-var dateChanged = false;
-
 function setDate() {
-    return new Promise(function(resolve) {
-        setTimeout(function() {
-            $('#tabs-page-headers')[0].children[2].children[0].click();
-            $('#history-date').val('THISDATE');
-            $('#history-tab-all').click();
-            $('#load-transport-history').click();
-            dateChanged = true;
-        }, 1000);
-        resolve();
-    })
+  return new Promise(function(resolve) {
+    console.log("date set")
+    $('#tabs-page-headers')[0].children[2].children[0].click();
+    $('#history-date').val('2024-04-16');
+    $('#history-tab-all').click();
+    $('#load-transport-history').click();
+    resolve();
+  })
 }
 
-function build() {
-    return new Promise(function(resolve) {
-        setTimeout(function() {
-                $("#menu")[0].value = false;
-                var simulate = new MouseEvent('click', {
-                    shiftKey: true,
-                    bubbles: true
-                });
+var simulate = new MouseEvent('click', {
+  shiftKey: true,
+  bubbles: true
+});
 
-                var data = [];
-                $("#menu")[0].value = false;
+var data = [];
+$("#menu")[0].value = false;
 
-                var TS = {
-                            date: $("#history-date")[0].value,
-                            uniqueID: $('#history-select-all-ts option:contains(garagenum )')[0].value
-                         }
-
-                function pointIndex (timeOfPoint) {
-                    for (var i = 0; i < data.length; i++)
-                    {
-                        var point = data[i].timeNav.split('');
-                        var time = point.slice(11, 16);
-                        var strtime = time.toString();
-                        if(strtime.replaceAll(',', '') === timeOfPoint) {
-                            return i;
-                            break;
-                        }
-                    }
-                }
-
-                function f1() {
-                    return new Promise(function(resolve) {
-                        console.log(1);
-                        $('#tabs-page-headers')[0].children[2].children[0].click()
-                        $("#history_select_all_ts_chosen").mousedown()
-                        $('.chosen-results li:contains(garagenum )').mouseup()
-                        $("#history-load-navigation").click()
-                        resolve();
-                    })
-                }
-
-                function f2() {
-                    return new Promise(function(resolve) {
-                            setTimeout(function() {
-                            console.log(2);
-                                var response = fetch('https://webnavlo.nta.group/WNavSystemB/Map/GetHistoryNavigation', {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json; charset=utf-8'
-                                    },
-                                    body: JSON.stringify(TS),
-                                }).then(async (response) => {
-                                      data = await response.json();
-                                    console.log(data)
-                                })
-                            resolve();
-                            }, 500);
-                    })
-                }
-
-                function f4() {
-                    return new Promise(function(resolve) {
-                        setTimeout(function() {
-                            console.log(4);
-                            $('#tabs-page-headers')[0].children[0].children[0].click()
-                            $('#tabs-page1 div:contains(RouteNum)')[0].click()
-                            $('#choose-transport-action-tracking-marsh')[0].click()
-                            $('#map')[0].children[3].children[5].style.display = "none"
-                            $('#map')[0].children[3].children[6].style.display = "block"
-                            resolve();
-                        }, 500);
-                    })
-                }
-
-            function f5() {
-                return new Promise(function(resolve){
-                    setTimeout(function(){
-                        console.log(5);
-                        $('#tabs-page-headers')[0].children[2].children[0].click();
-                        resolve();
-                    }, 1000);
-                })
-            }
-
-            function f6() {
-                return new Promise(function(resolve){
-                    setTimeout(function(){
-                        console.log(6);
-                        $('#tabs-page3')[0].scrollTo(0,0);
-                        resolve();
-                    }, 500);
-                })
-            }
-
-            function f3() {
-                return new Promise(function(resolve) {
-                        console.log(3);
-                        var start = pointIndex("StartTime")
-                        var end = pointIndex("EndTime")
-                        $(`#history-navigation-table tbody [index = ${start}]`).click()
-                        $(`#history-navigation-table tbody [index = ${end}]`)[0].dispatchEvent(simulate)
-                        resolve();
-                })
-            }
-
-            if(TS.uniqueID != $('#history-select-all-ts option:contains(NextGarageNum )')[0].value)
-            {
-                alreadyCreated = false;
-            }
-
-            if(!alreadyCreated) {
-                f1().then(function() {
-                    return f2();
-                });
-                var inter = setInterval(function() {
-                            if(data.length != 0){
-                            clearInterval(inter);
-                          f3().then(function() {
-                              return f4();
-                          }).then(function() {
-                              return f5();
-                          }).then(function() {
-                              return f6();
-                          }).then(function() {
-                              $("#menu")[0].value = true;
-                          });
-                    }
-                }, 250);
-            }
-            else
-                {
-                  f3().then(function() {
-                      return f4();
-                  }).then(function() {
-                      return f5();
-                  }).then(function() {
-                      return f6();
-                  }).then(function() {
-                      $("#menu")[0].value = true;
-                  });
-                }
-            resolve();
-        }, 1000);
-    })
+function pointIndex (timeOfPoint) {
+  for (var i = 0; i < data.length; i++)
+  {
+    var point = data[i].timeNav.split('');
+    var time = point.slice(11, 16);
+    var strtime = time.toString();
+    if(strtime.replaceAll(',', '') === timeOfPoint) {
+      return i;
+      break;
+    }
+  }
 }
 
-if ("THISDATE" != "PREVDATE") {
-  var dateInterval = setInterval(function() {
-    if ($("#menu")[0].value != true) {
-      clearInterval(dateInterval);
-      setDate();
+function f1() {
+  return new Promise(function(resolve) {
+    console.log(1);
+    $('#tabs-page-headers')[0].children[2].children[0].click();
+    $("#history_select_all_ts_chosen").mousedown();
+    $('.chosen-results li:contains(7077 )').mouseup();
+    $("#history-load-navigation").click();
+    resolve();
+  })
+}
+
+function f2() {
+  return new Promise(function(resolve) {
+    setTimeout(function() {
+      console.log(2);
+      var TS = {
+        date: $("#history-date")[0].value,
+        uniqueID: $('#history-select-all-ts option:contains(7077 )')[0].value
+      }
+      var response = fetch('https://webnavlo.nta.group/WNavSystemB/Map/GetHistoryNavigation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8'
+        },
+        body: JSON.stringify(TS),
+      }).then(async (response) => {
+        data = await response.json();
+        console.log(data)
+      })
+    }, 2000);
+    resolve();
+  })
+}
+
+function f4() {
+  return new Promise(function(resolve) {
+    setTimeout(function() {
+      console.log(4);
+      $('#tabs-page-headers')[0].children[0].children[0].click()
+      $('#tabs-page1 div:contains(7Л)')[0].click()
+      $('#choose-transport-action-tracking-marsh')[0].click()
+      $('#map')[0].children[3].children[5].style.display = "none"
+      $('#map')[0].children[3].children[6].style.display = "block"
+    }, 500);
+    resolve();
+  })
+}
+
+function f5() {
+  return new Promise(function(resolve){
+    setTimeout(function(){
+      console.log(5);
+      $('#tabs-page-headers')[0].children[2].children[0].click();
+    }, 1000);
+    resolve();
+  })
+}
+
+function f6() {
+  return new Promise(function(resolve){
+    setTimeout(function(){
+      console.log(6);
+      $('#tabs-page3')[0].scrollTo(0,0);
+    }, 500);
+    resolve();
+  })
+}
+
+function f3() {
+  return new Promise(function(resolve) {
+    console.log(3);
+    var start = pointIndex("18:00")
+    var end = pointIndex("19:01")
+    $(`#history-navigation-table tbody [index = ${start}]`).click()
+    $(`#history-navigation-table tbody [index = ${end}]`)[0].dispatchEvent(simulate)
+    resolve();
+  })
+}
+
+if("2024-04-16" != "2024-04-25") {
+  setDate().then(function() {
+    return f1();
+  }).then(function() {
+    return f2();
+  });
+  var inter = setInterval(function() {
+    if(data.length != 0){
+      f3().then(function() {
+        return f4();
+      }).then(function() {
+        return f5();
+      }).then(function() {
+        return f6();
+      }).then(function() {
+        clearInterval(inter);
+        $("#menu")[0].value = true;
+      });
     }
   }, 250);
-
-  var interval = setInterval(function() {
-    if (dateChanged) {
-      clearInterval(interval);
-      dateChanged = false;
-      build();
+}
+else if ("7077" != "7077")
+{
+  f1().then(function() {
+    return f2();
+  });
+  var inter = setInterval(function() {
+    if(data.length != 0){
+      clearInterval(inter);
+      f3().then(function() {
+        return f4();
+      }).then(function() {
+        return f5();
+      }).then(function() {
+        return f6();
+      }).then(function() {
+        $("#menu")[0].value = true;
+      });
     }
-  }, 500);
+  }, 250);
 }
 else
-  {
-    build();
-  }
+{
+  f3().then(function() {
+    return f4();
+  }).then(function() {
+    return f5();
+  }).then(function() {
+    return f6();
+  }).then(function() {
+    $("#menu")[0].value = true;
+  });
+}
 )";
 
     QString thisDate = date.sliced(6) + "-" + date.sliced(3, 2) + "-" + date.sliced(0, 2);

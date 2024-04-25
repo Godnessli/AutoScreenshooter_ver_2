@@ -1,13 +1,13 @@
 QT       += core gui widgets webenginewidgets webenginecore
 QT       += webchannel sql
 
-#INCLUDEPATH = A:/Qt/xlnt_x64-windows/include
+INCLUDEPATH = A:/Qt/xlnt_x64-windows/include
 #LIBS += A:/Qt/xlnt_x64-windows/debug/lib/xlntd.lib
-#LIBS += A:/Qt/xlnt_x64-windows/lib/xlnt.lib
+LIBS += A:/Qt/xlnt_x64-windows/lib/xlnt.lib
 
-INCLUDEPATH = C:/Users/kznts/vcpkg/packages/xlnt_x64-windows/include
+#INCLUDEPATH = C:/Users/kznts/vcpkg/packages/xlnt_x64-windows/include
 #LIBS += C:/Users/kznts/vcpkg/packages/xlnt_x64-windows/debug/lib/xlntd.lib
-LIBS += C:/Users/kznts/vcpkg/packages/xlnt_x64-windows/lib/xlnt.lib
+#LIBS += C:/Users/kznts/vcpkg/packages/xlnt_x64-windows/lib/xlnt.lib
 
 CONFIG += c++17
 
