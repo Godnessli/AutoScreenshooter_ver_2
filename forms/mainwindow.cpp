@@ -381,18 +381,6 @@ void MainWindow::stop()
 
 void MainWindow::openStory()
 {
-    QFile wcjs(":/qtwebchannel/qwebchannel.js");
-    if(!wcjs.open(QIODevice::ReadOnly))
-        qDebug() << "Couldn't load Qt's QWebChannel API!";
-    QString qWebChannelJs = QString::fromLatin1(wcjs.readAll());
-    wcjs.close();
-
-    ui -> widget -> page() -> runJavaScript(qWebChannelJs);
-
-    QWebChannel channel;
-    channel.registerObject("Js", this);
-    ui -> widget -> page() -> setWebChannel(&channel);
-
     QString jscodeSetDate =
 R"DELIM($('#tabs-page-headers')[0].children[2].children[0].click();
 $('#history-date').val('datefix');
@@ -410,15 +398,17 @@ void MainWindow::buildTrack()
 {
     QString jscodeShowTrack =
 R"(
+var dateChanged = false;
+
 function setDate() {
     return new Promise(function(resolve) {
-        if("THISDATE" != "PREVDATE")
-        {
+        setTimeout(function() {
             $('#tabs-page-headers')[0].children[2].children[0].click();
             $('#history-date').val('THISDATE');
             $('#history-tab-all').click();
             $('#load-transport-history').click();
-        }
+            dateChanged = true;
+        }, 1000);
         resolve();
     })
 }
@@ -426,8 +416,6 @@ function setDate() {
 function build() {
     return new Promise(function(resolve) {
         setTimeout(function() {
-            if(!alreadyCreated);
-            {
                 $("#menu")[0].value = false;
                 var simulate = new MouseEvent('click', {
                     shiftKey: true,
@@ -438,9 +426,9 @@ function build() {
                 $("#menu")[0].value = false;
 
                 var TS = {
-                                    date: $("#history-date")[0].value,
-                                    uniqueID: $('#history-select-all-ts option:contains(garagenum )')[0].value
-                                }
+                            date: $("#history-date")[0].value,
+                            uniqueID: $('#history-select-all-ts option:contains(garagenum )')[0].value
+                         }
 
                 function pointIndex (timeOfPoint) {
                     for (var i = 0; i < data.length; i++)
@@ -481,7 +469,7 @@ function build() {
                                     console.log(data)
                                 })
                             resolve();
-                            }, 250);
+                            }, 500);
                     })
                 }
 
@@ -495,7 +483,7 @@ function build() {
                             $('#map')[0].children[3].children[5].style.display = "none"
                             $('#map')[0].children[3].children[6].style.display = "block"
                             resolve();
-                        }, 200);
+                        }, 500);
                     })
                 }
 
@@ -515,9 +503,8 @@ function build() {
                         console.log(6);
                         $('#tabs-page3')[0].scrollTo(0,0);
                         resolve();
-                    }, 100);
+                    }, 500);
                 })
-            }
             }
 
             function f3() {
@@ -531,38 +518,67 @@ function build() {
                 })
             }
 
-            var alreadyCreated = true;
-
             if(TS.uniqueID != $('#history-select-all-ts option:contains(NextGarageNum )')[0].value)
             {
                 alreadyCreated = false;
             }
 
-            f1().then(function() {
-                return f2();
-            });
-            var inter = setInterval(function() {
-                        if(data.length != 0){
-                        clearInterval(inter);
-                      f3().then(function() {
-                          return f4();
-                      }).then(function() {
-                          return f5();
-                      }).then(function() {
-                          return f6();
-                      }).then(function() {
-                          $("#menu")[0].value = true;
-                      });
+            if(!alreadyCreated) {
+                f1().then(function() {
+                    return f2();
+                });
+                var inter = setInterval(function() {
+                            if(data.length != 0){
+                            clearInterval(inter);
+                          f3().then(function() {
+                              return f4();
+                          }).then(function() {
+                              return f5();
+                          }).then(function() {
+                              return f6();
+                          }).then(function() {
+                              $("#menu")[0].value = true;
+                          });
+                    }
+                }, 250);
+            }
+            else
+                {
+                  f3().then(function() {
+                      return f4();
+                  }).then(function() {
+                      return f5();
+                  }).then(function() {
+                      return f6();
+                  }).then(function() {
+                      $("#menu")[0].value = true;
+                  });
                 }
-            }, 250);
             resolve();
-        }, 500);
+        }, 1000);
     })
 }
 
-setDate().then(function() {
-    return build();
-});
+if ("THISDATE" != "PREVDATE") {
+  var dateInterval = setInterval(function() {
+    if ($("#menu")[0].value != true) {
+      clearInterval(dateInterval);
+      setDate();
+    }
+  }, 250);
+
+  var interval = setInterval(function() {
+    if (dateChanged) {
+      clearInterval(interval);
+      dateChanged = false;
+      build();
+    }
+  }, 500);
+}
+else
+  {
+    build();
+  }
 )";
 
     QString thisDate = date.sliced(6) + "-" + date.sliced(3, 2) + "-" + date.sliced(0, 2);
