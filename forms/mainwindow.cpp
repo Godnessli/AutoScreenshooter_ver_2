@@ -400,12 +400,19 @@ void MainWindow::buildTrack()
 R"(
 function setDate() {
   return new Promise(function(resolve) {
-    console.log("date set")
     $('#tabs-page-headers')[0].children[2].children[0].click();
     $('#history-date').val('2024-04-16');
     $('#history-tab-all').click();
     $('#load-transport-history').click();
-    resolve();
+
+    var inter = setInterval(function() {
+      if($('#load-transport-history')[0].classList.length < 2)
+        {
+          clearInterval(inter);
+          console.log("date set");
+          resolve();
+        }
+    }, 100);
   })
 }
 
@@ -432,35 +439,53 @@ function pointIndex (timeOfPoint) {
 
 function f1() {
   return new Promise(function(resolve) {
-    console.log(1);
     $('#tabs-page-headers')[0].children[2].children[0].click();
     $("#history_select_all_ts_chosen").mousedown();
     $('.chosen-results li:contains(7077 )').mouseup();
     $("#history-load-navigation").click();
-    resolve();
+
+    var inter = setInterval(function() {
+      if($("#history-load-navigation")[0].classList.length < 4)
+        {
+          clearInterval(inter);
+          console.log(1);
+          resolve();
+        }
+    }, 250);
   })
 }
 
 function f2() {
-  return new Promise(function(resolve) {
-    setTimeout(function() {
-      console.log(2);
-      var TS = {
-        date: $("#history-date")[0].value,
-        uniqueID: $('#history-select-all-ts option:contains(7077 )')[0].value
+  console.log(2);
+  var TS = {
+    date: $("#history-date")[0].value,
+    uniqueID: $('#history-select-all-ts option:contains(7077 )')[0].value
+  }
+  var response = fetch('https://webnavlo.nta.group/WNavSystemB/Map/GetHistoryNavigation', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8'
+    },
+    body: JSON.stringify(TS),
+  }).then(async (response) => {
+    data = await response.json();
+    console.log(data)
+  })
+}
+
+function f7() {
+  return new Promise(function(resolve){
+    if("7Л" != "7Л")
+      {
+        var inter = setInterval(function(){
+          if($('.history-selected-row').length > 10)
+            clearInterval(inter);
+            console.log(7);
+            $('#free-view-wrap')[0].click();
+            resolve();
+        }, 350);
       }
-      var response = fetch('https://webnavlo.nta.group/WNavSystemB/Map/GetHistoryNavigation', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json; charset=utf-8'
-        },
-        body: JSON.stringify(TS),
-      }).then(async (response) => {
-        data = await response.json();
-        console.log(data)
-      })
-    }, 2000);
-    resolve();
+    else resolve();
   })
 }
 
@@ -493,7 +518,7 @@ function f6() {
     setTimeout(function(){
       console.log(6);
       $('#tabs-page3')[0].scrollTo(0,0);
-    }, 500);
+    }, 1000);
     resolve();
   })
 }
@@ -509,7 +534,7 @@ function f3() {
   })
 }
 
-if("2024-04-16" != "2024-04-25") {
+if("2024-04-16" != "2024-04-14") {
   setDate().then(function() {
     return f1();
   }).then(function() {
@@ -517,7 +542,10 @@ if("2024-04-16" != "2024-04-25") {
   });
   var inter = setInterval(function() {
     if(data.length != 0){
+      clearInterval(inter);
       f3().then(function() {
+        return f7();
+      }).then(function() {
         return f4();
       }).then(function() {
         return f5();
@@ -539,6 +567,8 @@ else if ("7077" != "7077")
     if(data.length != 0){
       clearInterval(inter);
       f3().then(function() {
+        return f7();
+      }).then(function() {
         return f4();
       }).then(function() {
         return f5();
@@ -553,6 +583,8 @@ else if ("7077" != "7077")
 else
 {
   f3().then(function() {
+    return f7();
+  }).then(function() {
     return f4();
   }).then(function() {
     return f5();
@@ -563,6 +595,8 @@ else
   });
 }
 )";
+
+    //Добавить переменную предыдущего маршрута и заменитель в js
 
     QString thisDate = date.sliced(6) + "-" + date.sliced(3, 2) + "-" + date.sliced(0, 2);
     QString prevDate = previousDate.sliced(6) + "-" + previousDate.sliced(3, 2) + "-" + previousDate.sliced(0, 2);
