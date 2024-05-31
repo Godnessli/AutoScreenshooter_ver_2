@@ -29,8 +29,11 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ltb, &QPushButton::clicked, this, &MainWindow::buildTable);
     connect(screen, &QPushButton::clicked, this, &MainWindow::screenshot);
     connect(buildTrack, &QPushButton::clicked, this, &MainWindow::buildTrack);
-    connect(this, &MainWindow::tableLoaded, this, &MainWindow::openStory);
-    connect(timer, &QTimer::timeout, this, &MainWindow::getBoolean);
+    connect(timer2, &QTimer::timeout, this, &MainWindow::responseJson);
+    connect(timer1, &QTimer::timeout, this, &MainWindow::getBoolean);
+    connect(timer4, &QTimer::timeout, this, &MainWindow::dateSetFunc);
+    connect(timer5, &QTimer::timeout, this, &MainWindow::garageSet);
+    connect(timer6, &QTimer::timeout, this, &MainWindow::chooseTimeInterval);
 
     a.setRunning(false);
 
@@ -103,8 +106,8 @@ void MainWindow::buildTable()
         a.rCount = ui -> tableWidget_Item -> rowCount();
         date = ui -> tableWidget_Item -> item(numRow, 0) -> text();
         time = ui -> tableWidget_Item -> item(numRow, 3) -> text();
-        garage = ui -> tableWidget_Item -> item(numRow, 5) -> text();
-        route = ui -> tableWidget_Item -> item(numRow, 1) -> text();
+        thisGarage = ui -> tableWidget_Item -> item(numRow, 5) -> text();
+        thisRoute = ui -> tableWidget_Item -> item(numRow, 1) -> text();
 
         emit tableLoaded();
     }
@@ -155,10 +158,10 @@ void MainWindow::filePath()
     date = twi1 ->text();
 
     QTableWidgetItem *twi2 = ui -> tableWidget_Item -> item(numRow, 1);
-    route = twi2 ->text();
+    thisRoute = twi2 ->text();
 
     QTableWidgetItem *twi3 = ui -> tableWidget_Item -> item(numRow, 5);
-    garage = twi3 ->text();
+    thisGarage = twi3 ->text();
 
     QTableWidgetItem *twi4 = ui -> tableWidget_Item -> item(numRow, 6);
     problem = twi4 ->text();
@@ -169,7 +172,7 @@ void MainWindow::filePath()
     ui -> tableWidget_Item -> item(numRow, 7) -> setText("Есть");
 
     name = time.replace(QString(":"), QString("_")) +
-           space + garage + space + problem + dot + format;
+           space + thisGarage + space + problem + dot + format;
 
     initialPath = QCoreApplication::applicationDirPath();
 
@@ -180,10 +183,10 @@ void MainWindow::filePath()
         {
             initialPath += slash + date;
 
-            if(QDir(initialPath).mkdir(route))
-                initialPath += slash + route;
-            else if(QDir(initialPath).cd(route))
-                initialPath += slash + route;
+            if(QDir(initialPath).mkdir(thisRoute))
+                initialPath += slash + thisRoute;
+            else if(QDir(initialPath).cd(thisRoute))
+                initialPath += slash + thisRoute;
             else
                 initialPath = QCoreApplication::applicationDirPath();
         }
@@ -191,10 +194,10 @@ void MainWindow::filePath()
         {
             initialPath += slash + date;
 
-            if(QDir(initialPath).mkdir(route))
-                initialPath += slash + route;
-            else if(QDir(initialPath).cd(route))
-                initialPath += slash + route;
+            if(QDir(initialPath).mkdir(thisRoute))
+                initialPath += slash + thisRoute;
+            else if(QDir(initialPath).cd(thisRoute))
+                initialPath += slash + thisRoute;
             else
                 initialPath = QCoreApplication::applicationDirPath();
         }
@@ -208,10 +211,10 @@ void MainWindow::filePath()
         {
             initialPath += slash + date;
 
-            if(QDir(initialPath).mkdir(route))
-                initialPath += slash + route;
-            else if(QDir(initialPath).cd(route))
-                initialPath += slash + route;
+            if(QDir(initialPath).mkdir(thisRoute))
+                initialPath += slash + thisRoute;
+            else if(QDir(initialPath).cd(thisRoute))
+                initialPath += slash + thisRoute;
             else
                 initialPath = QCoreApplication::applicationDirPath();
         }
@@ -219,10 +222,10 @@ void MainWindow::filePath()
         {
             initialPath += slash + date;
 
-            if(QDir(initialPath).mkdir(route))
-                initialPath += slash + route;
-            else if(QDir(initialPath).cd(route))
-                initialPath += slash + route;
+            if(QDir(initialPath).mkdir(thisRoute))
+                initialPath += slash + thisRoute;
+            else if(QDir(initialPath).cd(thisRoute))
+                initialPath += slash + thisRoute;
             else
                 initialPath = QCoreApplication::applicationDirPath();
         }
@@ -284,9 +287,10 @@ void MainWindow::tableNavigate()
     date = ui -> tableWidget_Item -> item(numRow, 0) -> text();
     previousDate = ui -> tableWidget_Item -> item(numRow - 1, 0) -> text();
     time = ui -> tableWidget_Item -> item(numRow, 3) -> text();
-    garage = ui -> tableWidget_Item -> item(numRow, 5) -> text();
-    route = ui -> tableWidget_Item -> item(numRow, 1) -> text();
-    nextGarage = ui -> tableWidget_Item -> item(numRow + 1, 5) -> text();
+    thisGarage = ui -> tableWidget_Item -> item(numRow, 5) -> text();
+    thisRoute = ui -> tableWidget_Item -> item(numRow, 1) -> text();
+    prevRoute = ui -> tableWidget_Item -> item(numRow - 1, 1) -> text();
+    prevGarage = ui -> tableWidget_Item -> item(numRow - 1, 5) -> text();
     timeStep = ui -> tableWidget_Item -> item(numRow, 4) -> text();
 
     m_delegate -> setRows(rws);
@@ -350,8 +354,8 @@ void MainWindow::start()
 
     connect(this, SIGNAL(trackBuilded()), this, SLOT(filePath()));
     connect(&a, SIGNAL(filePathCreated()), this, SLOT(pixUpdate()));
-    connect(&a, SIGNAL(filePathCreated()), this, SLOT(tableNavigate()));
     connect(&a, SIGNAL(pixUpdated()), &a, SLOT(screenshot()));
+    connect(&a, SIGNAL(pixUpdated()), this, SLOT(tableNavigate()));
     connect(&a, SIGNAL(screencreate()), this, SLOT(buildTrack()));
 
     connect(&a, SIGNAL(finished()), &thread, SLOT(terminate()));
@@ -366,6 +370,13 @@ void MainWindow::stop()
 {
     a.setRunning(false);
 
+    ui -> autoBtn -> setText("Автомат");
+
+    ui -> buildTrack -> setEnabled(true);
+    ui -> openTable -> setEnabled(true);
+    ui -> screenBtn -> setEnabled(true);
+    ui -> loadTableBtn -> setEnabled(true);
+
     disconnect(&thread, &QThread::started, this, &MainWindow::buildTrack);
 
     disconnect(this, SIGNAL(trackBuilded()), this, SLOT(filePath()));
@@ -379,252 +390,37 @@ void MainWindow::stop()
     disconnect(&a, SIGNAL(wait()), &thread, SLOT(quit()));
 }
 
-void MainWindow::openStory()
-{
-    QString jscodeSetDate =
-R"DELIM($('#tabs-page-headers')[0].children[2].children[0].click();
-$('#history-date').val('datefix');
-$('#history-tab-all').click();
-$('#load-transport-history').click();
-)DELIM";
-
-    QString datefix = date.sliced(6) + "-" + date.sliced(3, 2) + "-" + date.sliced(0, 2);
-    jscodeSetDate.replace("datefix", datefix);
-
-    ui -> widget -> page() -> runJavaScript(jscodeSetDate);
-}
-
 void MainWindow::buildTrack()
 {
-    QString jscodeShowTrack =
-R"(
-function setDate() {
-  return new Promise(function(resolve) {
-    $('#tabs-page-headers')[0].children[2].children[0].click();
-    $('#history-date').val('2024-04-16');
-    $('#history-tab-all').click();
-    $('#load-transport-history').click();
+    connect(this, &MainWindow::dateSet, this, &MainWindow::setGarage);
+    connect(this, &MainWindow::garSet, this, &MainWindow::setTimeInterval);
+    connect(this, &MainWindow::intervalSet, this, &MainWindow::finishBuildingTrack);
 
-    var inter = setInterval(function() {
-      if($('#load-transport-history')[0].classList.length < 2)
-        {
-          clearInterval(inter);
-          console.log("date set");
-          resolve();
-        }
-    }, 100);
-  })
-}
+    thisDate = date.sliced(6) + "-" + date.sliced(3, 2) + "-" + date.sliced(0, 2);
 
-var simulate = new MouseEvent('click', {
-  shiftKey: true,
-  bubbles: true
-});
-
-var data = [];
-$("#menu")[0].value = false;
-
-function pointIndex (timeOfPoint) {
-  for (var i = 0; i < data.length; i++)
-  {
-    var point = data[i].timeNav.split('');
-    var time = point.slice(11, 16);
-    var strtime = time.toString();
-    if(strtime.replaceAll(',', '') === timeOfPoint) {
-      return i;
-      break;
-    }
-  }
-}
-
-function f1() {
-  return new Promise(function(resolve) {
-    $('#tabs-page-headers')[0].children[2].children[0].click();
-    $("#history_select_all_ts_chosen").mousedown();
-    $('.chosen-results li:contains(7077 )').mouseup();
-    $("#history-load-navigation").click();
-
-    var inter = setInterval(function() {
-      if($("#history-load-navigation")[0].classList.length < 4)
-        {
-          clearInterval(inter);
-          console.log(1);
-          resolve();
-        }
-    }, 250);
-  })
-}
-
-function f2() {
-  console.log(2);
-  var TS = {
-    date: $("#history-date")[0].value,
-    uniqueID: $('#history-select-all-ts option:contains(7077 )')[0].value
-  }
-  var response = fetch('https://webnavlo.nta.group/WNavSystemB/Map/GetHistoryNavigation', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json; charset=utf-8'
-    },
-    body: JSON.stringify(TS),
-  }).then(async (response) => {
-    data = await response.json();
-    console.log(data)
-  })
-}
-
-function f7() {
-  return new Promise(function(resolve){
-    if("7Л" != "7Л")
-      {
-        var inter = setInterval(function(){
-          if($('.history-selected-row').length > 10)
-            clearInterval(inter);
-            console.log(7);
-            $('#free-view-wrap')[0].click();
-            resolve();
-        }, 350);
-      }
-    else resolve();
-  })
-}
-
-function f4() {
-  return new Promise(function(resolve) {
-    setTimeout(function() {
-      console.log(4);
-      $('#tabs-page-headers')[0].children[0].children[0].click()
-      $('#tabs-page1 div:contains(7Л)')[0].click()
-      $('#choose-transport-action-tracking-marsh')[0].click()
-      $('#map')[0].children[3].children[5].style.display = "none"
-      $('#map')[0].children[3].children[6].style.display = "block"
-    }, 500);
-    resolve();
-  })
-}
-
-function f5() {
-  return new Promise(function(resolve){
-    setTimeout(function(){
-      console.log(5);
-      $('#tabs-page-headers')[0].children[2].children[0].click();
-    }, 1000);
-    resolve();
-  })
-}
-
-function f6() {
-  return new Promise(function(resolve){
-    setTimeout(function(){
-      console.log(6);
-      $('#tabs-page3')[0].scrollTo(0,0);
-    }, 1000);
-    resolve();
-  })
-}
-
-function f3() {
-  return new Promise(function(resolve) {
-    console.log(3);
-    var start = pointIndex("18:00")
-    var end = pointIndex("19:01")
-    $(`#history-navigation-table tbody [index = ${start}]`).click()
-    $(`#history-navigation-table tbody [index = ${end}]`)[0].dispatchEvent(simulate)
-    resolve();
-  })
-}
-
-if("2024-04-16" != "2024-04-14") {
-  setDate().then(function() {
-    return f1();
-  }).then(function() {
-    return f2();
-  });
-  var inter = setInterval(function() {
-    if(data.length != 0){
-      clearInterval(inter);
-      f3().then(function() {
-        return f7();
-      }).then(function() {
-        return f4();
-      }).then(function() {
-        return f5();
-      }).then(function() {
-        return f6();
-      }).then(function() {
-        clearInterval(inter);
-        $("#menu")[0].value = true;
-      });
-    }
-  }, 250);
-}
-else if ("7077" != "7077")
-{
-  f1().then(function() {
-    return f2();
-  });
-  var inter = setInterval(function() {
-    if(data.length != 0){
-      clearInterval(inter);
-      f3().then(function() {
-        return f7();
-      }).then(function() {
-        return f4();
-      }).then(function() {
-        return f5();
-      }).then(function() {
-        return f6();
-      }).then(function() {
-        $("#menu")[0].value = true;
-      });
-    }
-  }, 250);
-}
-else
-{
-  f3().then(function() {
-    return f7();
-  }).then(function() {
-    return f4();
-  }).then(function() {
-    return f5();
-  }).then(function() {
-    return f6();
-  }).then(function() {
-    $("#menu")[0].value = true;
-  });
-}
-)";
-
-    //Добавить переменную предыдущего маршрута и заменитель в js
-
-    QString thisDate = date.sliced(6) + "-" + date.sliced(3, 2) + "-" + date.sliced(0, 2);
-    QString prevDate = previousDate.sliced(6) + "-" + previousDate.sliced(3, 2) + "-" + previousDate.sliced(0, 2);
-
-    jscodeShowTrack.replace("THISDATE", thisDate);
-    jscodeShowTrack.replace("PREVDATE", prevDate);
-    jscodeShowTrack.replace("garagenum", garage);
-    jscodeShowTrack.replace("StartTime", time);
-    jscodeShowTrack.replace("RouteNum", route);
-    jscodeShowTrack.replace("NextGarageNum", nextGarage);
-
-    QTime startTime = QTime::fromString(time, "hh:mm");
-    QTime endTime;
-    if(timeStep != "")
+    if(numRow != 0)
     {
-        QTime betweenPointsTime = QTime::fromString(timeStep, "hh:mm");
-        startTime = startTime.addMSecs(betweenPointsTime.msecsSinceStartOfDay());
+        prevDate = previousDate.sliced(6) + "-" + previousDate.sliced(3, 2) + "-" + previousDate.sliced(0, 2);
+
+        functionComplete = false;
+
+        if(thisDate != prevDate)
+        {
+            setDate();
+        }
+        else if(thisGarage != prevGarage)
+        {
+            setGarage();
+        }
+        else
+        {
+            chooseTimeInterval();
+        }
     }
     else
-        endTime = startTime.addSecs(3600);
-
-    jscodeShowTrack.replace("EndTime", QString(endTime.toString("hh:mm")));
-
-    ui -> widget -> page() -> runJavaScript(jscodeShowTrack);
-
-    functionComplete = false;
-
-    timer -> start(1000);
+    {
+        setDate();
+    }
 }
 
 void MainWindow::getBoolean()
@@ -637,7 +433,270 @@ void MainWindow::getBoolean()
     {
         qDebug() << functionComplete;
 
-        timer -> stop();
+        timer1 -> stop();
+        ui -> widget -> page() -> runJavaScript("$('#menu')[0].value = false;");
         emit trackBuilded();
     }
+}
+
+void MainWindow::requestJson()
+{
+    QString requestJsonJs = R"(
+    data = [];
+      var TS = {
+        date: $("#history-date")[0].value,
+        uniqueID: $('#history-select-all-ts option:contains(GARAGE )')[0].value
+      }
+      var response = fetch('https://webnavlo.nta.group/WNavSystemB/Map/GetHistoryNavigation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8'
+        },
+        body: JSON.stringify(TS),
+      }).then(async (response) => {
+        data = await response.json();
+      }))";
+
+    requestJsonJs.replace("GARAGE", thisGarage);
+
+    ui -> widget -> page() -> runJavaScript(requestJsonJs);
+
+    timer2 -> start(200);
+}
+
+void MainWindow::responseJson()
+{
+    ui -> widget -> page() -> runJavaScript(R"(data;)",
+                                      [this](const QVariant &b)
+                                      {
+                                          json = b.toJsonArray();
+                                      });
+
+    if(!json.isEmpty())
+    {
+        timer2 -> stop();
+        timer5 -> start(250);
+    }
+}
+
+void MainWindow::setDate()
+{
+    QString setDateJs = R"(
+    simulate = new MouseEvent('click', {
+      shiftKey: true,
+      bubbles: true
+    });
+
+    $("#menu")[0].value = false;
+
+    $('#tabs-page-headers')[0].children[2].children[0].click();
+    $('#history-date').val('DATE');
+    $('#history-tab-all').click();
+    $('#load-transport-history').click();
+)";
+
+    setDateJs.replace("DATE", thisDate);
+
+    ui -> widget -> page() -> runJavaScript(setDateJs);
+
+    timer4 -> start(200);
+}
+
+void MainWindow::dateSetFunc()
+{
+    ui -> widget -> page()
+        -> runJavaScript("$('#load-transport-history')[0].classList.length < 2",
+                        [this](const QVariant &b)
+                        {
+                            qDebug() << b.toBool();
+                            dateSelected = b.toBool();
+                        });
+
+    if(dateSelected)
+    {
+        timer4 -> stop();
+        emit dateSet();
+    }
+}
+
+void MainWindow::setGarage()
+{
+    QString setGarageJs = R"(
+        $('#tabs-page-headers')[0].children[2].children[0].click();
+        $("#history_select_all_ts_chosen").mousedown();
+        $('.chosen-results li:contains(GARAGE )').mouseup();
+        $("#history-load-navigation").click();)";
+
+    setGarageJs.replace("GARAGE", thisGarage);
+
+    ui -> widget -> page() -> runJavaScript(setGarageJs);
+
+    requestJson();
+}
+
+void MainWindow::garageSet()
+{
+    ui -> widget -> page()
+        -> runJavaScript("$('#history-load-navigation')[0].classList.length < 4",
+                        [this](const QVariant &b)
+                        {
+                            garageSelected = b.toBool();
+                        });
+
+    if(garageSelected)
+    {
+        timer5 -> stop();
+        emit garSet();
+    }
+}
+
+void MainWindow::setTimeInterval()
+{
+    for(int i = 0; i < json.size(); ++i)
+    {
+        QJsonObject timeN = json[i].toObject();
+        QString timeNav = timeN["timeNav"].toString();
+        timeNav = timeNav.sliced(11);
+        timeNav = timeNav.sliced(0, 5);
+        QTime pointTimeNav = QTime::fromString(timeNav, "hh:mm");
+        QTime raceTime = QTime::fromString(time, "hh:mm");
+        bool indexFined = false;
+
+        for(int j = 0; j < 10; ++j)
+        {
+            int msecPerMin = 60000;
+            int strt = raceTime.msecsSinceStartOfDay();
+            strt -= j * msecPerMin;
+            QTime startTime = QTime::fromMSecsSinceStartOfDay(strt);
+
+            if(pointTimeNav == startTime)
+            {
+                pointIndex = i - j;
+                indexFined = true;
+            }
+        }
+        if(indexFined)
+            break;
+    }
+
+    for(int i = 0; i < json.size(); ++i)
+    {
+        QJsonObject timeN = json[i].toObject();
+        QString timeNav = timeN["timeNav"].toString();
+        timeNav = timeNav.sliced(11);
+        timeNav = timeNav.sliced(0, 5);
+        QTime pointTimeNav = QTime::fromString(timeNav, "hh:mm");
+        QTime raceTime = QTime::fromString(time, "hh:mm");
+        raceTime = raceTime.addSecs(3600);
+        bool indexFined = false;
+
+        for(int j = 0; j < 10; ++j)
+        {
+            int msecPerMin = 60000;
+            int strt = raceTime.msecsSinceStartOfDay();
+            strt += j * msecPerMin;
+            QTime finishTime = QTime::fromMSecsSinceStartOfDay(strt);
+
+            if(pointTimeNav == finishTime)
+            {
+                pointFinishIndex = i + j;
+                indexFined = true;
+            }
+        }
+        if(indexFined)
+        {
+            timer6 -> start(300);
+            break;
+        }
+    }
+}
+
+void MainWindow::chooseTimeInterval()
+{
+    timer6 -> stop();
+    QString chooseTIJs = R"(
+    $(`#history-navigation-table tbody [index = STARTINDEX]`).click()
+    $(`#history-navigation-table tbody [index = FINISHINDEX]`)[0].dispatchEvent(simulate))";
+
+    chooseTIJs.replace("STARTINDEX", QString::fromStdString(std::to_string(pointIndex)));
+    chooseTIJs.replace("FINISHINDEX", QString::fromStdString(std::to_string(pointFinishIndex)));
+
+    ui -> widget -> page() -> runJavaScript(chooseTIJs);
+
+    emit intervalSet();
+}
+
+void MainWindow::finishBuildingTrack()
+{
+    QString finishBTJs = R"(
+    function f7() {
+      return new Promise(function(resolve){
+        if("THISROUTE" != "PREVROUTE")
+          {
+            var inter = setInterval(function(){
+              if($('.history-selected-row').length > 10)
+                clearInterval(inter);
+                console.log(7);
+                $('#free-view-wrap')[0].click();
+                resolve();
+            }, 350);
+          }
+        else resolve();
+      })
+    }
+
+    function f4() {
+      return new Promise(function(resolve) {
+        setTimeout(function() {
+          console.log(4);
+          $('#tabs-page-headers')[0].children[0].children[0].click()
+          $('#tabs-page1 div:contains(THISROUTE)')[0].click()
+          $('#choose-transport-action-tracking-marsh')[0].click()
+          $('#map')[0].children[3].children[5].style.display = "none"
+          $('#map')[0].children[3].children[6].style.display = "block"
+        }, 500);
+        resolve();
+      })
+    }
+
+    function f5() {
+      return new Promise(function(resolve){
+        setTimeout(function(){
+          console.log(5);
+          $('#tabs-page-headers')[0].children[2].children[0].click();
+        }, 1000);
+        resolve();
+      })
+    }
+
+    function f6() {
+      return new Promise(function(resolve){
+        setTimeout(function(){
+          console.log(6);
+          $('#tabs-page3')[0].scrollTo(0,0);
+        }, 1000);
+        resolve();
+      })
+    }
+
+    f7().then(function() {
+      return f4();
+    }).then(function() {
+      return f5();
+    }).then(function() {
+      return f6();
+    }).then(function() {
+      $("#menu")[0].value = true;
+    });)";
+
+    finishBTJs.replace("THISROUTE", thisRoute);
+    finishBTJs.replace("PREVROUTE", prevRoute);
+
+    ui -> widget -> page() -> runJavaScript(finishBTJs);
+
+    disconnect(this, &MainWindow::dateSet, this, &MainWindow::setGarage);
+    disconnect(this, &MainWindow::garSet, this, &MainWindow::setTimeInterval);
+    disconnect(this, &MainWindow::intervalSet, this, &MainWindow::finishBuildingTrack);
+
+    timer1 -> start(250);
 }

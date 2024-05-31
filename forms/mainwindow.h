@@ -23,7 +23,9 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-    int numRow = 0;
+    int numRow = 0,
+        pointIndex,
+        pointFinishIndex;
     QPixmap pixmap;
 
     Delegate *m_delegate = new Delegate;
@@ -40,10 +42,18 @@ private slots:
     void on_autoBtn_clicked();
     void start();
     void stop();
-    void openStory();
     void tableNavigate();
     void buildTrack();
     void getBoolean();
+    void requestJson();
+    void responseJson();
+    void setDate();
+    void setGarage();
+    void setTimeInterval();
+    void chooseTimeInterval();
+    void finishBuildingTrack();
+    void dateSetFunc();
+    void garageSet();
 
 private:
     QLineEdit *locationEdit;
@@ -54,14 +64,17 @@ private:
 
     QString date,
             previousDate,
-            route,
-            garage,
-            nextGarage,
+            thisRoute,
+            prevRoute,
+            thisGarage,
+            prevGarage,
             problem,
             time,
             timeStep,
             name,
-            initialPath;
+            initialPath,
+            thisDate,
+            prevDate;
 
     const QString format = "jpg",
                   screens = "Скрины",
@@ -71,7 +84,16 @@ private:
 
     bool isBuild = false;
     bool functionComplete;
-    QTimer *timer = new QTimer;
+    bool dateSelected = false;
+    bool garageSelected = false;
+
+    QJsonArray json;
+    QTimer *timer1 = new QTimer;
+    QTimer *timer2 = new QTimer;
+    QTimer *timer3 = new QTimer;
+    QTimer *timer4 = new QTimer;
+    QTimer *timer5 = new QTimer;
+    QTimer *timer6 = new QTimer;
     Ui::MainWindow *ui;
     QThread thread;
     Automate a;
@@ -79,6 +101,9 @@ private:
 signals:
     void tableLoaded();
     void trackBuilded();
+    void dateSet();
+    void garSet();
+    void intervalSet();
 
 };
 #endif // MAINWINDOW_H
