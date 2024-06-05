@@ -43,7 +43,7 @@ private slots:
     void start();
     void stop();
     void tableNavigate();
-    void buildTrack();
+    void buildTrackFunc();
     void getBoolean();
     void requestJson();
     void responseJson();

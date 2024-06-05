@@ -28,7 +28,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(ltb, &QPushButton::clicked, this, &MainWindow::buildTable);
     connect(screen, &QPushButton::clicked, this, &MainWindow::screenshot);
-    connect(buildTrack, &QPushButton::clicked, this, &MainWindow::buildTrack);
+    connect(buildTrack, &QPushButton::clicked, this, &MainWindow::buildTrackFunc);
     connect(timer2, &QTimer::timeout, this, &MainWindow::responseJson);
     connect(timer1, &QTimer::timeout, this, &MainWindow::getBoolean);
     connect(timer4, &QTimer::timeout, this, &MainWindow::dateSetFunc);
@@ -350,13 +350,13 @@ void MainWindow::start()
     ui -> screenBtn -> setEnabled(false);
     ui -> loadTableBtn -> setEnabled(false);
 
-    connect(&thread, &QThread::started, this, &MainWindow::buildTrack);
+    connect(&thread, &QThread::started, this, &MainWindow::buildTrackFunc);
 
     connect(this, SIGNAL(trackBuilded()), this, SLOT(filePath()));
     connect(&a, SIGNAL(filePathCreated()), this, SLOT(pixUpdate()));
     connect(&a, SIGNAL(pixUpdated()), &a, SLOT(screenshot()));
     connect(&a, SIGNAL(pixUpdated()), this, SLOT(tableNavigate()));
-    connect(&a, SIGNAL(screencreate()), this, SLOT(buildTrack()));
+    connect(&a, SIGNAL(screencreate()), this, SLOT(buildTrackFunc()));
 
     connect(&a, SIGNAL(finished()), &thread, SLOT(terminate()));
     connect(&a, SIGNAL(finished()), this, SLOT(stop()));
@@ -377,20 +377,20 @@ void MainWindow::stop()
     ui -> screenBtn -> setEnabled(true);
     ui -> loadTableBtn -> setEnabled(true);
 
-    disconnect(&thread, &QThread::started, this, &MainWindow::buildTrack);
+    disconnect(&thread, &QThread::started, this, &MainWindow::buildTrackFunc);
 
     disconnect(this, SIGNAL(trackBuilded()), this, SLOT(filePath()));
     disconnect(&a, SIGNAL(filePathCreated()), this, SLOT(pixUpdate()));
     disconnect(&a, SIGNAL(filePathCreated()), this, SLOT(tableNavigate()));
     disconnect(&a, SIGNAL(pixUpdated()), &a, SLOT(screenshot()));
-    disconnect(&a, SIGNAL(screencreate()), this, SLOT(buildTrack()));
+    disconnect(&a, SIGNAL(screencreate()), this, SLOT(buildTrackFunc()));
 
     disconnect(&a, SIGNAL(finished()), &thread, SLOT(terminate()));
     disconnect(&a, SIGNAL(finished()), this, SLOT(stop()));
     disconnect(&a, SIGNAL(wait()), &thread, SLOT(quit()));
 }
 
-void MainWindow::buildTrack()
+void MainWindow::buildTrackFunc()
 {
     connect(this, &MainWindow::dateSet, this, &MainWindow::setGarage);
     connect(this, &MainWindow::garSet, this, &MainWindow::setTimeInterval);
