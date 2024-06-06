@@ -260,9 +260,9 @@ void MainWindow::web()
     logIn.setName("user_login.js");
     logIn.setRunsOnSubFrames(true);
     logIn.setSourceCode(QStringLiteral(
-        R"DELIM($("#Login").val("KuznecovAV");
-$('#Password').val('1234');
-$('#Key').val('piteravto5');
+        R"DELIM($("#Login").val("YOUR_LOGIN");
+$('#Password').val('YOUR_PASSWORD');
+$('#Key').val('PRODUCT_KEY');
 $('#signIn').click();
 
 var completed = false;)DELIM"));
