@@ -7,14 +7,34 @@ class Delegate : public QStyledItemDelegate
 {
 public:
     using QStyledItemDelegate::QStyledItemDelegate;
-    QVector<int> rows() const
+    QVector<int> gRows() const
     {
-        return m_rows;
+        return good_rows;
     }
 
-    void setRows(const QVector<int> &rows)
+    QVector<int> qRows() const
     {
-        m_rows = rows;
+        return question_rows;
+    }
+
+    QVector<int> bRows() const
+    {
+        return bad_rows;
+    }
+
+    void setGoodRows(const QVector<int> &rows)
+    {
+        good_rows = rows;
+    }
+
+    void setQuestionRows(const QVector<int> &rows)
+    {
+        question_rows = rows;
+    }
+
+    void setBadRows(const QVector<int> &rows)
+    {
+        bad_rows = rows;
     }
 
 protected:
@@ -22,14 +42,26 @@ protected:
                          const QModelIndex &index) const override
     {
         QStyledItemDelegate::initStyleOption(option, index);
-        if(m_rows.contains(index.row()))
+        if(good_rows.contains(index.row()))
         {
             option -> backgroundBrush = QBrush(QColor("#3cb371"));
+        }
+
+        if(question_rows.contains(index.row()))
+        {
+            option -> backgroundBrush = QBrush(QColor("#FF7F50"));
+        }
+
+        if(bad_rows.contains(index.row()))
+        {
+            option -> backgroundBrush = QBrush(QColor("#CD5C5C"));
         }
     }
 
 private:
-    QVector<int> m_rows;
+    QVector<int> good_rows;
+    QVector<int> question_rows;
+    QVector<int> bad_rows;
 };
 
 #endif // DELEGATE_H

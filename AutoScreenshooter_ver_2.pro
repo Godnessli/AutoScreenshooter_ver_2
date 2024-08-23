@@ -1,9 +1,13 @@
 QT       += core gui widgets webenginewidgets webenginecore
-QT       += webchannel sql
+QT       += sql
 
 INCLUDEPATH = A:/Qt/xlnt_x64-windows/include
-LIBS += A:/Qt/xlnt_x64-windows/debug/lib/xlntd.lib
-#LIBS += A:/Qt/xlnt_x64-windows/lib/xlnt.lib
+
+CONFIG(debug, debug|release) {
+    LIBS += A:/Qt/xlnt_x64-windows/debug/lib/xlntd.lib
+}else {
+    LIBS += A:/Qt/xlnt_x64-windows/lib/xlnt.lib
+}
 
 #INCLUDEPATH = C:/Users/kznts/vcpkg/packages/xlnt_x64-windows/include
 #LIBS += C:/Users/kznts/vcpkg/packages/xlnt_x64-windows/debug/lib/xlntd.lib
@@ -13,20 +17,21 @@ CONFIG += c++17
 
 SOURCES += \
     classes/automate.cpp \
-    classes/requestinterceptor.cpp \
     classes/table.cpp \
     forms/mainwindow.cpp \
+    forms/setting.cpp \
     main.cpp \
 
 HEADERS += \
     classes/automate.h \
     classes/delegate.h \
-    classes/requestinterceptor.h \
     classes/table.h \
-    forms/mainwindow.h
+    forms/mainwindow.h \
+    forms/setting.h
 
 FORMS += \
-    forms/mainwindow.ui
+    forms/mainwindow.ui \
+    forms/setting.ui
 
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
