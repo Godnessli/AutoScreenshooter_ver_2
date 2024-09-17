@@ -18,6 +18,8 @@ CONFIG += c++17
 SOURCES += \
     classes/automate.cpp \
     classes/table.cpp \
+    classes/viewer.cpp \
+    forms/dialog.cpp \
     forms/mainwindow.cpp \
     forms/setting.cpp \
     main.cpp \
@@ -26,10 +28,13 @@ HEADERS += \
     classes/automate.h \
     classes/delegate.h \
     classes/table.h \
+    classes/viewer.h \
+    forms/dialog.h \
     forms/mainwindow.h \
     forms/setting.h
 
 FORMS += \
+    forms/dialog.ui \
     forms/mainwindow.ui \
     forms/setting.ui
 

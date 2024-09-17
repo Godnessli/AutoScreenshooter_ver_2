@@ -21,10 +21,7 @@ public:
     void getpath();
     bool check(const QString &path);
     void readtable();
-    QComboBox *models = new QComboBox(dialog);
     void getTableModel();
-private:
-    QDialog *dialog = new QDialog();
 
 };
 

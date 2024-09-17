@@ -3,6 +3,7 @@
 
 #include "classes/delegate.h"
 #include "classes/automate.h"
+#include "classes/viewer.h"
 #include "xlnt/xlnt.hpp"
 #include "classes/table.h"
 #include <QMainWindow>
@@ -39,6 +40,10 @@ public:
 public slots:
     void screenshot();
     void video();
+    void nextImage();
+    void prevImage();
+    void deleteScreen();
+    void setVid();
 
     void keyPressEvent(QKeyEvent *event);
 private slots:
@@ -52,7 +57,6 @@ private slots:
     void stop();
     void tableNavigate();
     void buildTrack();
-    void getBoolean();
     void requestJson();
     void responseJson();
     void setDate();
@@ -71,14 +75,10 @@ private slots:
     void entered();
     void closeDialog();
     void showImage();
-    void nextImage();
-    void prevImage();
-    void deleteScreen();
-    void setVid();
-    void controlSetting();
-    void changeScreenKey();
     void signalOfTrackBuilded();
     void checkTrack();
+    void buildRoute();
+    void buildTrackSelf();
 private:
     QMap<QString, unsigned> mapOfCars;
     QVector<QVector<QString>> tab;
@@ -103,7 +103,8 @@ private:
             thisDate,
             prevDate,
             loginText,
-            insert;
+            insert,
+            factDate;
 
     const QString format = "jpg",
                   screens = "Скрины",
@@ -117,6 +118,11 @@ private:
     bool garageSelected = false;
     bool changed = false;
     bool changeScreen = false;
+    bool key1 = false;
+    bool key2 = false;
+    bool firstBuild = false;
+    bool correctPosition = false;
+    bool firstBuildedTable = false;
     int count = 0;
     int makedCount = 0;
 
@@ -132,16 +138,19 @@ private:
     QTimer *timer6 = new QTimer;
     QTimer *timer7 = new QTimer;
     QTimer *timer8 = new QTimer;
+    QTimer *changeRouteTimerDate = new QTimer;
+
     QTime prevTime, startTime;
     Table *table = new Table;
 
+    QSqlDatabase db = QSqlDatabase::addDatabase("QODBC");
     QSettings *settingsFile = new QSettings(QString(QCoreApplication::applicationDirPath() +
                                                 "/" + "cache" + "/" + "settings.ini"), QSettings::IniFormat);
     QLineEdit *logIn = new QLineEdit;
     QLineEdit *password = new QLineEdit;
     QDialog *enter = new QDialog;
-    QDialog *viewer = new QDialog;
     QDialog *settings = new QDialog;
+    Viewer *viewer = new Viewer;
     QLabel *screenLbl = new QLabel("Скриншот: ");
     QLabel *videoLbl = new QLabel("Видео: ");
     QLabel *buildTrackLbl = new QLabel("Постройка трека: ");
@@ -153,22 +162,9 @@ private:
     QPushButton *out = new QPushButton("Выйти");
     QGridLayout *layout = new QGridLayout(enter);
     QGridLayout *settingLayout = new QGridLayout(settings);
-    QComboBox *keys = new QComboBox(enter);
+    QComboBox *keys = new QComboBox();
     QPushButton *accept = new QPushButton("Принять");
     QPushButton *cancel = new QPushButton("Отмена");
-    QPushButton *del = new QPushButton("Удалить скрин");
-    QPushButton *prev = new QPushButton("Предыдущий");
-    QPushButton *next = new QPushButton("Следующий");
-    QPushButton *setVideo = new QPushButton("Видео");
-    QGridLayout *lout = new QGridLayout(viewer);
-    QLabel *photo = new QLabel();
-
-    QLabel *lbldate = new QLabel();
-    QLabel *lblroute = new QLabel();
-    QLabel *lbldirect = new QLabel();
-    QLabel *lbltime = new QLabel();
-    QLabel *lblgarage = new QLabel();
-    QLabel *lblproblem = new QLabel();
 
     Ui::MainWindow *ui;
     QThread thread;

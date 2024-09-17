@@ -19,7 +19,7 @@ void Table::getpath()
 
 void Table::getTableModel()
 {
-    QLabel *text = new QLabel("Выберете модель таблицы, которую будете выбирать.");
+    /*QLabel *text = new QLabel("Выберете модель таблицы, которую будете выбирать.");
     QPushButton *accept = new QPushButton("Принять");
     QPushButton *cancel = new QPushButton("Выйти");
     connect(accept, &QPushButton::clicked, this, &Table::readtable);
@@ -38,7 +38,7 @@ void Table::getTableModel()
     models -> setItemData(1, false);
     dialog -> setModal(true);
 
-    dialog -> show();
+    dialog -> show();*/
 }
 
 bool Table::check(const QString &path)
@@ -51,7 +51,6 @@ bool Table::check(const QString &path)
 
 void Table::readtable()
 {
-    dialog -> close();
     tab.clear();
     getpath();
 
@@ -171,7 +170,7 @@ void Table::readtable()
                                     day_count = stod(date_str);
                                     QDate date;
                                     date.setDate(1900, 1, 1);
-                                    date = date.addDays(day_count);
+                                    date = date.addDays(day_count - 2);
                                     ROW.push_back(date.toString("dd.MM.yyyy"));
                                 }
                                 catch(std::invalid_argument)
@@ -207,9 +206,9 @@ void Table::readtable()
                     }
                 }
 
-                if(ROW[6] == QString("ОБРЫВ БЛОКА ГЛОНАСС") || ROW[6] == QString("ПРОБКИ") ||
-                    ROW[6] == QString("РЕЙС ВЫПОЛНЕН ПРАВИЛЬНО") || ROW[6].toLower() == QString("ракетная опасность") ||
-                    ROW[6] == QString("РО"))
+                if(ROW[6].simplified() == QString("ОБРЫВ БЛОКА ГЛОНАСС") || ROW[6].simplified() == QString("ПРОБКИ") ||
+                    ROW[6].simplified() == QString("РЕЙС ВЫПОЛНЕН ПРАВИЛЬНО") || ROW[6].toLower().simplified() == QString("ракетная опасность") ||
+                    ROW[6].simplified() == QString("РО"))
                 {
                     ROW.push_back(QString::number(numOfRow));
                     tab.append(ROW);

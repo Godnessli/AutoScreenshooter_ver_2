@@ -17,7 +17,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>AutoScreenshooter_kur 1.0</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -28,7 +28,7 @@
         <property name="minimumSize">
          <size>
           <width>0</width>
-          <height>40</height>
+          <height>35</height>
          </size>
         </property>
         <property name="text">
@@ -41,7 +41,7 @@
         <property name="minimumSize">
          <size>
           <width>0</width>
-          <height>40</height>
+          <height>35</height>
          </size>
         </property>
         <property name="text">
@@ -54,12 +54,24 @@
         <property name="minimumSize">
          <size>
           <width>120</width>
-          <height>40</height>
+          <height>35</height>
          </size>
         </property>
         <property name="text">
-         <string>Автомат 
- (В разработке)</string>
+         <string>Автомат</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="buildRoute">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>35</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Построить трассу</string>
         </property>
        </widget>
       </item>
@@ -68,11 +80,25 @@
         <property name="minimumSize">
          <size>
           <width>0</width>
-          <height>40</height>
+          <height>35</height>
          </size>
         </property>
         <property name="text">
-         <string>Построить трассу</string>
+         <string>Построить трек</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="buildTrackself">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>35</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Построить трек
+(самостоятельно)</string>
         </property>
        </widget>
       </item>
@@ -310,7 +336,7 @@
           <property name="minimumSize">
            <size>
             <width>0</width>
-            <height>40</height>
+            <height>35</height>
            </size>
           </property>
           <property name="text">
@@ -323,7 +349,7 @@
           <property name="minimumSize">
            <size>
             <width>0</width>
-            <height>40</height>
+            <height>35</height>
            </size>
           </property>
           <property name="text">

@@ -22,9 +22,16 @@ protected slots:
     void changeScreenKey();
     void changeVideoKey();
     void changeBuildTrackKey();
+    void changeNextKey();
+    void changePrevKey();
+    void changeVidScrKey();
+    void changeDeleteKey();
 
     void acceptSettings();
     void cancelSettings();
+    void buildTable();
+    void changeSavePath();
+
 private:
     QSettings *settingsFile = new QSettings(QString(QCoreApplication::applicationDirPath() +
                                                     "/" + "cache" + "/" + "settings.ini"), QSettings::IniFormat);
@@ -32,6 +39,10 @@ private:
     bool changeScreen = false;
     bool changeVideo = false;
     bool changeBuildTrack = false;
+    bool changeNext = false;
+    bool changePrev = false;
+    bool changeVidScr = false;
+    bool changeDelete = false;
     Ui::Setting *ui;
     MainWindow *mw;
 
